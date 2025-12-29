@@ -1,0 +1,137 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
+
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Primary" Fixed="true" Dense="false" Class="app-bar-fixed">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <MudText Typo="Typo.h6" Class="ml-3 app-title">DataTouch CRM</MudText>
+        <MudSpacer />
+        <AuthorizeView>
+            <Authorized>
+                <MudText Typo="Typo.body2" Class="mr-3 user-name">@context.User.Identity?.Name</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Href="/api/auth/logout" />
+            </Authorized>
+        </AuthorizeView>
+        <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)" 
+                       Color="Color.Inherit" OnClick="@ToggleDarkMode" />
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2" Class="drawer-dark">
+        <MudNavMenu>
+            <MudNavLink Href="/" Icon="@Icons.Material.Filled.Dashboard" Match="NavLinkMatch.All">Panel de Control</MudNavLink>
+            <MudNavLink Href="/leads" Icon="@Icons.Material.Filled.People">Leads</MudNavLink>
+            <MudNavLink Href="/cards/mine" Icon="@Icons.Material.Filled.CreditCard">Mi Tarjeta</MudNavLink>
+            <MudNavLink Href="/templates" Icon="@Icons.Material.Filled.Style">Plantillas</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent Class="main-content-wrapper">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+<div id="blazor-error-ui" data-nosnippet>
+    Ha ocurrido un error inesperado.
+    <a href="." class="reload">Recargar</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private bool _drawerOpen = true;
+    private bool _isDarkMode = false;
+
+    private MudTheme _theme = new()
+    {
+        // We only use Dark palette for enterprise dark design system
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#4F46E5",        // dt-primary-600
+            Secondary = "#14B8A6",      // dt-accent-teal-500
+            AppbarBackground = "#111827", // dt-surface-1
+            Background = "#0B0F14",     // dt-bg-app
+            Surface = "#162234",        // dt-surface-2
+            DrawerBackground = "#0E141B", // dt-bg-subtle
+            AppbarText = "#E5E7EB",     // dt-text-primary
+            TextPrimary = "#E5E7EB",    // dt-text-primary
+            TextSecondary = "#9CA3AF",  // dt-text-secondary
+            TextDisabled = "#6B7280",   // dt-text-muted
+            ActionDefault = "#9CA3AF",  // dt-text-secondary
+            ActionDisabled = "#6B7280", // dt-text-muted
+            ActionDisabledBackground = "#0E141B", // dt-disabled-bg
+            DrawerText = "#E5E7EB",     // dt-text-primary
+            DrawerIcon = "#9CA3AF",     // dt-text-secondary
+            Divider = "#233044",        // dt-border-default
+            DividerLight = "#233044",   // dt-border-default
+            LinesDefault = "#233044",   // dt-border-default
+            LinesInputs = "#233044",    // dt-border-default
+            TableLines = "#233044",     // dt-border-default
+            TableStriped = "#0E141B",   // dt-bg-subtle
+            TableHover = "#17243A",     // dt-hover-surface
+            Info = "#2563EB",           // dt-info
+            Success = "#16A34A",        // dt-success
+            Warning = "#D97706",        // dt-warning
+            Error = "#DC2626",          // dt-danger
+            Dark = "#0B0F14",           // dt-bg-app
+            HoverOpacity = 0.08,
+            GrayDefault = "#9CA3AF",
+            GrayLight = "#6B7280",
+            GrayLighter = "#233044",
+            GrayDark = "#E5E7EB",
+            GrayDarker = "#E5E7EB",
+            OverlayDark = "rgba(0,0,0,0.5)",
+            OverlayLight = "rgba(0,0,0,0.3)",
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = "#4F46E5",        // dt-primary-600
+            Secondary = "#14B8A6",      // dt-accent-teal-500
+            AppbarBackground = "#111827", // dt-surface-1
+            Background = "#0B0F14",     // dt-bg-app
+            Surface = "#162234",        // dt-surface-2
+            DrawerBackground = "#0E141B", // dt-bg-subtle
+            AppbarText = "#E5E7EB",     // dt-text-primary
+            TextPrimary = "#E5E7EB",    // dt-text-primary
+            TextSecondary = "#9CA3AF",  // dt-text-secondary
+            TextDisabled = "#6B7280",   // dt-text-muted
+            ActionDefault = "#9CA3AF",  // dt-text-secondary
+            ActionDisabled = "#6B7280", // dt-text-muted
+            ActionDisabledBackground = "#0E141B", // dt-disabled-bg
+            DrawerText = "#E5E7EB",     // dt-text-primary
+            DrawerIcon = "#9CA3AF",     // dt-text-secondary
+            Divider = "#233044",        // dt-border-default
+            DividerLight = "#233044",   // dt-border-default
+            LinesDefault = "#233044",   // dt-border-default
+            LinesInputs = "#233044",    // dt-border-default
+            TableLines = "#233044",     // dt-border-default
+            TableStriped = "#0E141B",   // dt-bg-subtle
+            TableHover = "#17243A",     // dt-hover-surface
+            Info = "#2563EB",           // dt-info
+            Success = "#16A34A",        // dt-success
+            Warning = "#D97706",        // dt-warning
+            Error = "#DC2626",          // dt-danger
+            Dark = "#0B0F14",           // dt-bg-app
+            HoverOpacity = 0.08,
+            GrayDefault = "#9CA3AF",
+            GrayLight = "#6B7280",
+            GrayLighter = "#233044",
+            GrayDark = "#E5E7EB",
+            GrayDarker = "#E5E7EB",
+            OverlayDark = "rgba(0,0,0,0.5)",
+            OverlayLight = "rgba(0,0,0,0.3)",
+        },
+        LayoutProperties = new LayoutProperties()
+        {
+            DefaultBorderRadius = "8px"
+        },
+        Typography = new Typography()
+        {
+            Default = new DefaultTypography()
+            {
+                FontFamily = new[] { "Inter", "Segoe UI", "system-ui", "-apple-system", "sans-serif" }
+            }
+        }
+    };
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    
+    private void ToggleDarkMode() => _isDarkMode = !_isDarkMode;
+}

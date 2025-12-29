@@ -1,0 +1,328 @@
+@using DataTouch.Domain.Entities
+
+<div class="card-preview-container">
+    <div class="preview-header">
+        <MudText Typo="Typo.subtitle2">Vista previa</MudText>
+        <div class="device-toggle">
+            <MudIconButton Icon="@Icons.Material.Filled.PhoneIphone" 
+                           Size="Size.Small" 
+                           Color="@(_deviceType == "mobile" ? Color.Primary : Color.Default)"
+                           OnClick="@(() => _deviceType = "mobile")" />
+        </div>
+    </div>
+    
+    <div class="phone-frame">
+        <div class="phone-notch"></div>
+        <div class="phone-screen" style="@GetScreenBackgroundStyle()">
+            @* Card Container *@
+            <div class="preview-card" style="@GetCardStyle()">
+                @* Profile Section *@
+                <div class="preview-profile">
+                    @if (!string.IsNullOrEmpty(Card?.ProfileImageUrl))
+                    {
+                        <img src="@Card.ProfileImageUrl" alt="@Card.FullName" class="preview-avatar" />
+                    }
+                    else
+                    {
+                        <div class="preview-avatar-placeholder" style="@GetAvatarStyle()">
+                            @GetInitials()
+                        </div>
+                    }
+                    
+                    <div class="preview-name" style="@GetTextStyle()">
+                        @(Card?.FullName ?? "Tu Nombre")
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Card?.Title))
+                    {
+                        <div class="preview-title" style="color: @Style?.PrimaryColor">
+                            @Card.Title
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Card?.CompanyName))
+                    {
+                        <div class="preview-company">
+                            @Card.CompanyName
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Card?.Bio))
+                    {
+                        <div class="preview-bio">
+                            @Card.Bio
+                        </div>
+                    }
+                </div>
+                
+                @* CTA Buttons *@
+                <div class="preview-cta">
+                    @if (Card?.ShowSaveContact == true)
+                    {
+                        <div class="preview-btn primary" style="@GetPrimaryButtonStyle()">
+                            <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Size="Size.Small" />
+                            Guardar
+                        </div>
+                    }
+                    
+                    <div class="preview-btn-row">
+                        @if (Card?.ShowWhatsApp == true && !string.IsNullOrEmpty(Card?.WhatsAppNumber))
+                        {
+                            <div class="preview-btn secondary whatsapp">
+                                <MudIcon Icon="@Icons.Custom.Brands.WhatsApp" Size="Size.Small" />
+                            </div>
+                        }
+                        @if (Card?.ShowCall == true && !string.IsNullOrEmpty(Card?.Phone))
+                        {
+                            <div class="preview-btn secondary" style="@GetSecondaryButtonStyle()">
+                                <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" />
+                            </div>
+                        }
+                        @if (Card?.ShowEmail == true && !string.IsNullOrEmpty(Card?.Email))
+                        {
+                            <div class="preview-btn secondary" style="@GetSecondaryButtonStyle()">
+                                <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" />
+                            </div>
+                        }
+                    </div>
+                </div>
+                
+                @* QR Code Preview *@
+                @if (ShowQr)
+                {
+                    <div class="preview-qr">
+                        <div class="qr-placeholder" style="@GetQrStyle()">
+                            <MudIcon Icon="@Icons.Material.Filled.QrCode" Size="Size.Large" />
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                            Escanea para ver la tarjeta
+                        </MudText>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-preview-container {
+        background: var(--mud-palette-background);
+        border-radius: 16px;
+        padding: 16px;
+    }
+    
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+    
+    .phone-frame {
+        background: #1F2937;
+        border-radius: 36px;
+        padding: 12px;
+        max-width: 320px;
+        margin: 0 auto;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    
+    .phone-notch {
+        width: 120px;
+        height: 24px;
+        background: #1F2937;
+        border-radius: 0 0 16px 16px;
+        margin: 0 auto 8px;
+    }
+    
+    .phone-screen {
+        border-radius: 28px;
+        min-height: 500px;
+        padding: 24px 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .preview-card {
+        width: 100%;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .preview-profile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .preview-avatar,
+    .preview-avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin-bottom: 12px;
+        object-fit: cover;
+    }
+    
+    .preview-avatar-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .preview-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    
+    .preview-title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    
+    .preview-company {
+        font-size: 0.75rem;
+        color: #6B7280;
+        margin-bottom: 8px;
+    }
+    
+    .preview-bio {
+        font-size: 0.75rem;
+        color: #6B7280;
+        max-width: 200px;
+        line-height: 1.4;
+    }
+    
+    .preview-cta {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .preview-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    .preview-btn.primary {
+        color: white;
+    }
+    
+    .preview-btn-row {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+    
+    .preview-btn.secondary {
+        width: 48px;
+        height: 48px;
+        padding: 0;
+        border-radius: 12px;
+    }
+    
+    .preview-btn.whatsapp {
+        background: #25D366;
+        color: white;
+    }
+    
+    .preview-qr {
+        margin-top: 24px;
+        text-align: center;
+    }
+    
+    .qr-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+</style>
+
+@code {
+    [Parameter] public Card? Card { get; set; }
+    [Parameter] public CardStyle? Style { get; set; }
+    [Parameter] public bool ShowQr { get; set; } = false;
+    
+    private string _deviceType = "mobile";
+    
+    private string GetScreenBackgroundStyle()
+    {
+        if (Style == null) return "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);";
+        
+        return Style.BackgroundType switch
+        {
+            "solid" => $"background: {Style.BackgroundValue ?? Style.PrimaryColor};",
+            "gradient" => $"background: {Style.BackgroundValue ?? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"};",
+            "image" => $"background: url({Style.BackgroundValue}) center/cover;",
+            _ => "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"
+        };
+    }
+    
+    private string GetCardStyle()
+    {
+        if (Style == null) return "background: white; border-radius: 16px;";
+        
+        return $"background: {Style.BackgroundColor}; border-radius: {Style.CardBorderRadius}; box-shadow: {Style.CardShadow};";
+    }
+    
+    private string GetAvatarStyle()
+    {
+        var primary = Style?.PrimaryColor ?? "#6366F1";
+        var secondary = Style?.SecondaryColor ?? "#EC4899";
+        return $"background: linear-gradient(135deg, {primary}, {secondary});";
+    }
+    
+    private string GetTextStyle()
+    {
+        return $"color: {Style?.TextColor ?? "#1F2937"}; font-family: {Style?.FontFamily ?? "Inter"};";
+    }
+    
+    private string GetPrimaryButtonStyle()
+    {
+        return $"background: {Style?.PrimaryColor ?? "#6366F1"};";
+    }
+    
+    private string GetSecondaryButtonStyle()
+    {
+        var primary = Style?.PrimaryColor ?? "#6366F1";
+        return $"background: {primary}20; color: {primary};";
+    }
+    
+    private string GetQrStyle()
+    {
+        return $"background: {Style?.QrBackground ?? "#FFFFFF"}; color: {Style?.QrForeground ?? "#000000"};";
+    }
+    
+    private string GetInitials()
+    {
+        if (string.IsNullOrWhiteSpace(Card?.FullName)) return "?";
+        
+        var parts = Card.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        return parts[0][0].ToString().ToUpper();
+    }
+}

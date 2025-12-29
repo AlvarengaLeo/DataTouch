@@ -1,0 +1,1083 @@
+@page "/"
+@page "/dashboard"
+@attribute [Authorize]
+@using DataTouch.Web.Services
+@using Microsoft.JSInterop
+@inject DashboardService DashboardService
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@using static DataTouch.Web.Services.DashboardService
+@implements IAsyncDisposable
+
+<PageTitle>Panel de Control - DataTouch</PageTitle>
+
+<div class="dashboard-page">
+    @* ═══════════════════════════════════════════════════════════════
+       HEADER WITH DATE RANGE SELECTOR
+       ═══════════════════════════════════════════════════════════════ *@
+    <div class="dashboard-header">
+        <div class="header-left">
+            <h1 class="page-title">Panel de Control</h1>
+        </div>
+        <div class="header-right">
+            <div class="date-selector">
+                <select class="date-dropdown" @bind="_selectedDateRange" @bind:after="OnDateRangeChanged">
+                    <option value="7d">Últimos 7 días</option>
+                    <option value="14d">Últimos 14 días</option>
+                    <option value="30d">Últimos 30 días</option>
+                    <option value="90d">Últimos 90 días</option>
+                </select>
+                <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="loading-overlay">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+
+    @* ═══════════════════════════════════════════════════════════════
+       ROW 1: EXECUTIVE KPIs (4 Cards)
+       ═══════════════════════════════════════════════════════════════ *@
+    <div class="kpi-row">
+        @* Total Interactions *@
+        <div class="kpi-card">
+            <div class="kpi-icon interactions">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-value">@FormatNumber(_kpis?.TotalInteractions.Value ?? 0)</span>
+                <span class="kpi-label">Total Interacciones</span>
+                <span class="kpi-delta @((_kpis?.TotalInteractions.IsPositive ?? true) ? "positive" : "negative")">
+                    @FormatDelta(_kpis?.TotalInteractions.DeltaPercent ?? 0) vs período anterior
+                </span>
+            </div>
+        </div>
+
+        @* Leads Captured *@
+        <div class="kpi-card">
+            <div class="kpi-icon leads">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-value">@FormatNumber(_kpis?.LeadsCaptured.Value ?? 0)</span>
+                <span class="kpi-label">Leads Capturados</span>
+                <span class="kpi-delta @((_kpis?.LeadsCaptured.IsPositive ?? true) ? "positive" : "negative")">
+                    @FormatDelta(_kpis?.LeadsCaptured.DeltaPercent ?? 0) vs período anterior
+                </span>
+            </div>
+        </div>
+
+        @* Meetings Booked *@
+        <div class="kpi-card">
+            <div class="kpi-icon meetings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-value">@FormatNumber(_kpis?.MeetingsBooked.Value ?? 0)</span>
+                <span class="kpi-label">Reuniones Agendadas</span>
+                <span class="kpi-delta @((_kpis?.MeetingsBooked.IsPositive ?? true) ? "positive" : "negative")">
+                    @FormatDelta(_kpis?.MeetingsBooked.DeltaPercent ?? 0) vs período anterior
+                </span>
+            </div>
+        </div>
+
+        @* Conversion Rate *@
+        <div class="kpi-card">
+            <div class="kpi-icon conversion">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                    <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                @if (_kpis?.ConversionRate.HasData == true)
+                {
+                    <span class="kpi-value">@((_kpis?.ConversionRate.Value ?? 0).ToString("F1"))%</span>
+                    <span class="kpi-label">Tasa de Conversión</span>
+                    <span class="kpi-delta @((_kpis?.ConversionRate.IsPositive ?? true) ? "positive" : "negative")">
+                        @FormatDelta(_kpis?.ConversionRate.DeltaPercent ?? 0) vs período anterior
+                    </span>
+                }
+                else
+                {
+                    <span class="kpi-value kpi-na">N/A</span>
+                    <span class="kpi-label">Tasa de Conversión</span>
+                    <span class="kpi-sublabel">Sin interacciones en el rango seleccionado</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* ═══════════════════════════════════════════════════════════════
+       ROW 2: CHART + TOP LOCATIONS
+       ═══════════════════════════════════════════════════════════════ *@
+    <div class="main-row">
+        @* Interactions vs Leads Chart - Premium Redesign *@
+        <div class="panel chart-panel">
+            @* Header Row *@
+            <div class="chart-header">
+                <div class="chart-header-left">
+                    <h2 class="chart-title">Interacciones vs. Leads</h2>
+                    <span class="chart-subtitle">@GetChartSubtitle() · Actualizado @GetLastUpdateTime()</span>
+                </div>
+                <div class="chart-toggle">
+                    <button class="toggle-btn @(_chartAggregation == ChartAggregation.Day ? "active" : "")" 
+                            @onclick="() => SetChartAggregation(ChartAggregation.Day)">Día</button>
+                    <button class="toggle-btn @(_chartAggregation == ChartAggregation.Week ? "active" : "")" 
+                            @onclick="() => SetChartAggregation(ChartAggregation.Week)">Semana</button>
+                    <button class="toggle-btn @(_chartAggregation == ChartAggregation.Month ? "active" : "")" 
+                            @onclick="() => SetChartAggregation(ChartAggregation.Month)">Mes</button>
+                </div>
+            </div>
+
+            @* KPI Bar *@
+            <div class="chart-kpi-bar">
+                <div class="chart-kpi">
+                    <span class="kpi-label">Interacciones:</span>
+                    <span class="kpi-value">@GetTotalInteractions()</span>
+                    <span class="kpi-delta @(GetInteractionsDelta() >= 0 ? "positive" : "negative")">
+                        @(GetInteractionsDelta() >= 0 ? "↑" : "↓")@Math.Abs(GetInteractionsDelta()).ToString("0.#")%
+                    </span>
+                </div>
+                <span class="kpi-divider">|</span>
+                <div class="chart-kpi">
+                    <span class="kpi-label">Leads:</span>
+                    <span class="kpi-value">@GetTotalLeads()</span>
+                    <span class="kpi-delta @(GetLeadsDelta() >= 0 ? "positive" : "negative")">
+                        @(GetLeadsDelta() >= 0 ? "↑" : "↓")@Math.Abs(GetLeadsDelta()).ToString("0.#")%
+                    </span>
+                </div>
+                <span class="kpi-divider">|</span>
+                <div class="chart-kpi">
+                    <span class="kpi-label">Conversión:</span>
+                    <span class="kpi-value">@GetConversionRate().ToString("0.#")%</span>
+                    <span class="kpi-delta @(GetConversionDelta() >= 0 ? "positive" : "negative")">
+                        @(GetConversionDelta() >= 0 ? "↑" : "↓")@Math.Abs(GetConversionDelta()).ToString("0.#")%
+                    </span>
+                </div>
+            </div>
+
+            @* Chart Container with Tooltip *@
+            <div class="chart-container" @onmouseleave="() => _hoveredPointIndex = -1">
+                <svg viewBox="0 0 800 260" class="chart-svg" preserveAspectRatio="xMidYMid meet">
+                    @* Gradient definitions *@
+                    <defs>
+                        <linearGradient id="interactionsGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.4" />
+                            <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.02" />
+                        </linearGradient>
+                        <linearGradient id="leadsGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#14B8A6" stop-opacity="0.25" />
+                            <stop offset="100%" stop-color="#14B8A6" stop-opacity="0.02" />
+                        </linearGradient>
+                    </defs>
+
+                    @* Subtle grid lines *@
+                    @for (int i = 0; i <= 4; i++)
+                    {
+                        var y = 200 - i * 45;
+                        <line x1="50" y1="@y" x2="750" y2="@y" class="grid-line" />
+                    }
+
+                    @* Left Y-axis labels (Interactions) *@
+                    @for (int i = 0; i <= 4; i++)
+                    {
+                        var y = 205 - i * 45;
+                        var value = (int)(GetMaxInteractions() / 4.0 * i);
+                        <g><text x="40" y="@y" class="axis-label y-label-left">@value</text></g>
+                    }
+
+                    @* Right Y-axis labels (Leads) *@
+                    @for (int i = 0; i <= 4; i++)
+                    {
+                        var y = 205 - i * 45;
+                        var value = (int)(GetMaxLeads() / 4.0 * i);
+                        <g><text x="760" y="@y" class="axis-label y-label-right">@value</text></g>
+                    }
+
+                    @* Areas *@
+                    <path d="@GetInteractionsAreaPath()" fill="url(#interactionsGradient)" />
+                    <path d="@GetLeadsAreaPath()" fill="url(#leadsGradient)" />
+
+                    @* Lines *@
+                    <polyline points="@GetInteractionsLinePath()" fill="none" class="chart-line interactions" stroke-width="2.5" 
+                              stroke-linejoin="round" stroke-linecap="round" />
+                    <polyline points="@GetLeadsLinePath()" fill="none" class="chart-line leads" stroke-width="2" 
+                              stroke-linejoin="round" stroke-linecap="round" />
+
+                    @* Interactive hover zones + data points *@
+                    @for (int i = 0; i < _chartData.Count; i++)
+                    {
+                        var index = i;
+                        var x = GetChartX(i);
+                        var point = _chartData[i];
+                        var interactionY = GetChartYInteractions(point.Interactions);
+                        var leadY = GetChartYLeads(point.Leads);
+
+                        @* Hover zone *@
+                        <rect x="@(x - 35)" y="20" width="70" height="185" fill="transparent" 
+                              @onmouseenter="() => _hoveredPointIndex = index" class="hover-zone" />
+
+                        @* Data points - show on hover or last point *@
+                        @if (_hoveredPointIndex == i || (i == _chartData.Count - 1 && _hoveredPointIndex == -1))
+                        {
+                            <circle cx="@x" cy="@interactionY" r="6" class="data-point interactions-point" />
+                            <circle cx="@x" cy="@leadY" r="5" class="data-point leads-point" />
+                        }
+                    }
+
+                    @* X-axis labels *@
+                    @for (int i = 0; i < _chartData.Count; i++)
+                    {
+                        var x = GetChartX(i);
+                        var date = _chartData[i].Date;
+                        <g><text x="@x.ToString("F0")" y="228" class="axis-label x-label">@GetXAxisLabel(date)</text></g>
+                    }
+
+                    @* Vertical line on hover *@
+                    @if (_hoveredPointIndex >= 0 && _hoveredPointIndex < _chartData.Count)
+                    {
+                        var x = GetChartX(_hoveredPointIndex);
+                        <line x1="@x" y1="20" x2="@x" y2="200" stroke="#3B4F6B" stroke-width="1" stroke-dasharray="4,4" opacity="0.6" />
+                    }
+                </svg>
+
+                @* Floating Tooltip *@
+                @if (_hoveredPointIndex >= 0 && _hoveredPointIndex < _chartData.Count)
+                {
+                    var point = _chartData[_hoveredPointIndex];
+                    var conversion = point.Interactions > 0 ? (decimal)point.Leads / point.Interactions * 100 : 0;
+                    <div class="chart-tooltip" style="left: @(GetTooltipLeft(_hoveredPointIndex))px;">
+                        <div class="tooltip-date">@GetTooltipDate(point.Date)</div>
+                        <div class="tooltip-row">
+                            <span class="tooltip-dot interactions"></span>
+                            <span class="tooltip-label">Interacciones:</span>
+                            <span class="tooltip-value">@point.Interactions</span>
+                        </div>
+                        <div class="tooltip-row">
+                            <span class="tooltip-dot leads"></span>
+                            <span class="tooltip-label">Leads:</span>
+                            <span class="tooltip-value">@point.Leads</span>
+                        </div>
+                        <div class="tooltip-conversion">
+                            Conversión: <strong>@conversion.ToString("0.#")%</strong>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @* Legend + Micro-insights *@
+            <div class="chart-footer">
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot interactions"></span>
+                        <span>Interacciones</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot leads"></span>
+                        <span>Leads</span>
+                    </div>
+                </div>
+                <div class="chart-insights">
+                    Pico: <strong>@GetPeakDay()</strong> · Mínimo: <strong>@GetLowestDay()</strong>
+                </div>
+            </div>
+        </div>
+
+        @* Top Locations *@
+        <div class="panel locations-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Ubicaciones Principales</h2>
+            </div>
+            <div class="location-highlight">
+                <span class="location-name">@(_topLocations?.TopLocation ?? "Cargando...")</span>
+                <span class="location-delta @((_topLocations?.TopLocationDelta ?? 0) >= 0 ? "positive" : "negative")">
+                    @FormatDelta(_topLocations?.TopLocationDelta ?? 0) interacciones
+                    <span class="delta-arrow">@((_topLocations?.TopLocationDelta ?? 0) >= 0 ? "↑" : "↓")</span> vs período anterior
+                </span>
+            </div>
+            
+            @* Premium Leaflet Map with Overlay *@
+            <div class="map-container @(_mapExpanded ? "expanded" : "collapsed")">
+                @* Top Location Pill (contextual overlay) *@
+                @if (_topLocations?.HasData == true && _topLocations.TopLocation != "No data")
+                {
+                    <div class="map-top-pill">
+                        <span class="pill-icon">📍</span>
+                        <span class="pill-text">Principal: <strong>@_topLocations.TopLocation</strong></span>
+                    </div>
+                }
+                
+                @* Map Container *@
+                <div id="locations-map" class="leaflet-map"></div>
+                
+                @* Subtle overlay for theme integration *@
+                <div class="map-overlay"></div>
+                
+                @* Status indicators *@
+                @if (_topLocations?.MapPoints?.Count == 0 || _topLocations?.HasData != true)
+                {
+                    <div class="map-placeholder">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        <span>Sin datos de ubicación disponibles</span>
+                    </div>
+                }
+                
+                @if (_topLocations?.PendingGeoCount > 0)
+                {
+                    <div class="map-notice">
+                        <span>🌐 @_topLocations.PendingGeoCount ubicación(es) pendientes de geolocalización</span>
+                    </div>
+                }
+                
+                @* Expand/Collapse Toggle *@
+                <button class="map-toggle" @onclick="ToggleMapExpanded">
+                    @(_mapExpanded ? "Contraer" : "Ver detalles")
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="@(_mapExpanded ? "rotated" : "")">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+            </div>
+
+            @* Location Table *@
+            <div class="location-table">
+                <div class="table-header-row">
+                    <span class="col-location">Ubicación</span>
+                    <span class="col-stat">Interacciones</span>
+                    <span class="col-stat">Leads</span>
+                    <span class="col-stat">Conversión</span>
+                </div>
+                @foreach (var loc in _topLocations?.Locations.Take(5) ?? new List<LocationData>())
+                {
+                    <div class="table-row">
+                        <span class="col-location">@loc.Location</span>
+                        <span class="col-stat">@loc.Interactions</span>
+                        <span class="col-stat">@loc.Leads</span>
+                        <span class="col-stat conversion">@(loc.ConversionRate.ToString("F1"))%</span>
+                    </div>
+                }
+            </div>
+            
+            <div class="sort-controls">
+                <span class="sort-label">Ordenar por:</span>
+                <button class="sort-btn @(_locationSortBy == LocationSortBy.Conversion ? "active" : "")" 
+                        @onclick="() => SetLocationSort(LocationSortBy.Conversion)">Conversión</button>
+                <button class="sort-btn @(_locationSortBy == LocationSortBy.Leads ? "active" : "")" 
+                        @onclick="() => SetLocationSort(LocationSortBy.Leads)">Leads</button>
+                <button class="sort-btn @(_locationSortBy == LocationSortBy.Interactions ? "active" : "")" 
+                        @onclick="() => SetLocationSort(LocationSortBy.Interactions)">Interacciones</button>
+            </div>
+        </div>
+    </div>
+
+    @* ═══════════════════════════════════════════════════════════════
+       ROW 3: INSIGHTS + TOP LINKS + HIGH-INTENT
+       ═══════════════════════════════════════════════════════════════ *@
+    <div class="insights-row">
+        @* Insights Panel (LEFT) - NO High-Intent summary here *@
+        <div class="panel insights-panel">
+            <h2 class="section-title">Perspectivas</h2>
+            <div class="panel-content">
+                
+                @* Top CTA *@
+                <div class="insight-item">
+                    <div class="insight-icon-wrapper @GetCtaBadgeClass(_insights?.TopCta)">
+                        <IconRegistry Type="@(_insights?.HasTopCta == true ? _insights?.TopCta?.ToLowerInvariant() ?? "link" : "link")" Size="20" />
+                    </div>
+                    <div class="insight-content">
+                        <span class="insight-label">@(_insights?.HasTopCta == true ? _insights?.TopCta : "N/A")</span>
+                        <span class="insight-sublabel">CTA Principal</span>
+                    </div>
+                    <div class="insight-stats">
+                        @if (_insights?.HasTopCta == true)
+                        {
+                            <span class="insight-value">@((_insights?.TopCtaConversion ?? 0).ToString("F1"))%</span>
+                            <span class="insight-delta @((_insights?.TopCtaDelta ?? 0) >= 0 ? "positive" : "negative")">
+                                @FormatDelta(_insights?.TopCtaDelta ?? 0) vs período
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="insight-value insight-na">—</span>
+                            <span class="insight-sublabel">Sin clics de CTA aún</span>
+                        }
+                    </div>
+                </div>
+
+                @* Median Time to Lead *@
+                <div class="insight-item">
+                    <div class="insight-icon time">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="insight-content">
+                        <span class="insight-label">Tiempo Promedio a Lead</span>
+                        @if (_insights?.HasMedianTime == true)
+                        {
+                            <span class="insight-sublabel">@((_insights?.MedianTimeDelta ?? 0) >= 0 ? "Más lento" : "Más rápido") vs período</span>
+                        }
+                        else
+                        {
+                            <span class="insight-sublabel">Datos insuficientes</span>
+                        }
+                    </div>
+                    <div class="insight-stats">
+                        @if (_insights?.HasMedianTime == true)
+                        {
+                            <span class="insight-value">@(_insights?.MedianTimeToLeadMinutes ?? 0) min</span>
+                            <span class="insight-delta @((_insights?.MedianTimeDelta ?? 0) <= 0 ? "positive" : "negative")">
+                                @FormatDelta(Math.Abs(_insights?.MedianTimeDelta ?? 0)) vs período
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="insight-value insight-na">N/A</span>
+                        }
+                    </div>
+                </div>
+
+                @* Inactive Cards *@
+                <div class="insight-item">
+                    <div class="insight-icon inactive">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                        </svg>
+                    </div>
+                    <div class="insight-content">
+                        <span class="insight-label">Tarjetas Inactivas: @(_insights?.InactiveCardsCount ?? 0)</span>
+                        <span class="insight-sublabel">@((_insights?.InactiveCardsPercent ?? 0).ToString("F0"))% del total</span>
+                    </div>
+                    <div class="insight-stats">
+                        <span class="insight-sublabel potential-loss">Pérdida potencial: ~@(_insights?.PotentialLossInteractions ?? 0) interacciones</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Top Links Panel (CENTER) *@
+        <div class="panel links-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Enlaces Principales</h2>
+            </div>
+            <div class="links-table">
+                <div class="links-header">
+                    <span class="col-link">Nombre del enlace</span>
+                    <span class="col-clicks">Clics</span>
+                    <span class="col-conversion">Conversión</span>
+                    <span class="col-trend">Tendencia</span>
+                </div>
+                @foreach (var link in _topLinks)
+                {
+                    <div class="link-row">
+                        <div class="col-link">
+                            <div class="link-icon-badge @GetLinkBadgeClass(link.LinkName)">
+                                <IconRegistry Type="@link.LinkName.ToLowerInvariant()" Size="16" />
+                            </div>
+                            <span class="link-name">@link.LinkName</span>
+                        </div>
+                        <span class="col-clicks">@link.Clicks</span>
+                        <div class="col-conversion">
+                            <div class="conversion-bar">
+                                <div class="bar-fill" style="width: @(Math.Min(100, link.ConversionRate))%"></div>
+                            </div>
+                            <span class="conversion-value">@(link.ConversionRate.ToString("F0"))%</span>
+                        </div>
+                        <span class="col-trend @(link.Trend >= 0 ? "positive" : "negative")">
+                            @(link.Trend >= 0 ? "▲" : "▼") @(Math.Abs(link.Trend).ToString("F0"))%
+                        </span>
+                    </div>
+                }
+            </div>
+
+            <div class="links-actions">
+                <button class="action-btn"><span class="action-icon">📂</span> Abrir lead</button>
+                <button class="action-btn"><span class="action-icon">👤</span> Asignar</button>
+                <button class="action-btn"><span class="action-icon">✓</span> Marcar contactado</button>
+                <button class="action-btn"><span class="action-icon">+</span> Crear tareas</button>
+            </div>
+
+            <div class="links-footer">
+                <span class="sync-status">⟳ ¡Pipeline sincronizado! Actualizado ahora</span>
+                <button class="view-details-btn" @onclick="NavigateToLeads">Ver detalles</button>
+            </div>
+        </div>
+
+        @* High-Intent Panel (RIGHT) - THE ONLY High-Intent location *@
+        <div class="panel high-intent-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Alta Intención</h2>
+                <div class="sort-dropdown">
+                    <span>Ordenar por Interacciones</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="high-intent-summary">
+                <span class="hi-value">@(_highIntent?.TotalHighIntent ?? 0)</span>
+                <div class="hi-label">
+                    <span class="hi-text">Clientes</span>
+                    <span class="hi-sublabel">alta intención en 24h</span>
+                </div>
+            </div>
+
+            <div class="hi-breakdown">
+                <div class="hi-item">
+                    <div class="hi-icon-badge badge-contact">
+                        <IconRegistry Type="contact_save" Size="16" />
+                    </div>
+                    <span class="hi-name">Contactos guardados</span>
+                    <span class="hi-count positive">▲@(_highIntent?.ContactsSaved ?? 0)</span>
+                </div>
+                <div class="hi-item">
+                    <div class="hi-icon-badge badge-calendar">
+                        <IconRegistry Type="calendar" Size="16" />
+                    </div>
+                    <span class="hi-name">Reuniones</span>
+                    <span class="hi-count positive">▲@(_highIntent?.MeetingsBooked ?? 0)</span>
+                </div>
+                <div class="hi-item">
+                    <div class="hi-icon-badge badge-whatsapp">
+                        <IconRegistry Type="whatsapp" Size="16" />
+                    </div>
+                    <span class="hi-name">Clics en WhatsApp</span>
+                    <span class="hi-count">@(_highIntent?.WhatsAppClicks ?? 0)</span>
+                </div>
+                <div class="hi-item">
+                    <div class="hi-icon-badge badge-call">
+                        <IconRegistry Type="call" Size="16" />
+                    </div>
+                    <span class="hi-name">Clics en llamada</span>
+                    <span class="hi-count">@(_highIntent?.CallClicks ?? 0)</span>
+                </div>
+            </div>
+
+            <div class="recent-activity">
+                <h4 class="activity-title">Actividad Reciente</h4>
+                @foreach (var activity in _highIntent?.RecentActivities ?? new())
+                {
+                    <div class="activity-item @(activity.LeadId.HasValue ? "clickable" : "")" @onclick="() => NavigateToLead(activity.LeadId)">
+                        <div class="activity-icon-wrapper @GetEventTypeBadgeClass(activity.EventType)">
+                            <IconRegistry Type="@GetEventTypeIcon(activity.EventType)" Size="16" />
+                        </div>
+                        <div class="activity-content">
+                            <span class="activity-name">@(activity.ContactName ?? "Contacto")</span>
+                            <span class="activity-action">@activity.Description</span>
+                        </div>
+                        <span class="activity-time">@activity.TimeAgo</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool _isLoading = true;
+    private string _selectedDateRange = "7d";
+    private bool _mapExpanded = false;
+    private bool _mapInitialized = false;
+    private System.Threading.Timer? _refreshTimer;
+    private int _hoveredPointIndex = -1;
+    private DateTime _lastDataUpdate = DateTime.UtcNow;
+
+    // Data
+    private DashboardKpis? _kpis;
+    private List<ChartDataPoint> _chartData = new();
+    private TopLocationsResult? _topLocations;
+    private List<LinkPerformance> _topLinks = new();
+    private InsightsData? _insights;
+    private HighIntentData? _highIntent;
+
+    // Filters
+    private ChartAggregation _chartAggregation = ChartAggregation.Day;
+    private LocationSortBy _locationSortBy = LocationSortBy.Conversion;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+        
+        // Set up auto-refresh timer (every 30 seconds)
+        _refreshTimer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadDashboardData();
+                await UpdateMapMarkers();
+            });
+        }, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || (!_mapInitialized && _topLocations?.HasData == true))
+        {
+            await InitializeMap();
+        }
+    }
+
+    private async Task InitializeMap()
+    {
+        if (_topLocations == null) return;
+        
+        try
+        {
+            var centerLat = _topLocations.CenterLat ?? 13.6929;
+            var centerLng = _topLocations.CenterLng ?? -89.2182;
+            var zoom = _topLocations.DefaultZoom;
+
+            var success = await JSRuntime.InvokeAsync<bool>(
+                "DataTouchMap.init", 
+                "locations-map", 
+                centerLat, 
+                centerLng, 
+                zoom);
+
+            if (success)
+            {
+                _mapInitialized = true;
+                await UpdateMapMarkers();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Map init error: {ex.Message}");
+        }
+    }
+
+    private async Task UpdateMapMarkers(bool preserveView = true)
+    {
+        if (!_mapInitialized || _topLocations?.MapPoints == null) return;
+
+        try
+        {
+            var mapPointsData = _topLocations.MapPoints.Select(p => new
+            {
+                location = p.Location,
+                latitude = p.Latitude,
+                longitude = p.Longitude,
+                weight = p.Weight,
+                leads = p.Leads,
+                conversionRate = p.ConversionRate,
+                delta = p.Delta,
+                isTopLocation = p.IsTopLocation
+            }).ToArray();
+
+            await JSRuntime.InvokeVoidAsync("DataTouchMap.updateMarkers", (object)mapPointsData, preserveView);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Map update error: {ex.Message}");
+        }
+    }
+
+    private async Task ToggleMapExpanded()
+    {
+        _mapExpanded = !_mapExpanded;
+        
+        // Invalidate map size after toggle animation
+        await Task.Delay(300);
+        if (_mapInitialized)
+        {
+            await JSRuntime.InvokeVoidAsync("DataTouchMap.invalidateSize");
+        }
+    }
+
+    private async Task LoadDashboardData()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var orgId = AuthService.GetCurrentOrganizationId();
+            if (!orgId.HasValue)
+            {
+                Snackbar.Add("No organization found", Severity.Error);
+                return;
+            }
+
+            var dateRange = DashboardService.GetDateRangeFromOption(_selectedDateRange);
+
+            // Load all data in parallel
+            var kpisTask = DashboardService.GetDashboardKpisAsync(orgId.Value, dateRange);
+            var chartTask = DashboardService.GetInteractionsVsLeadsChartAsync(orgId.Value, dateRange, _chartAggregation);
+            var locationsTask = DashboardService.GetTopLocationsAsync(orgId.Value, dateRange, _locationSortBy);
+            var linksTask = DashboardService.GetTopLinksAsync(orgId.Value, dateRange);
+            var insightsTask = DashboardService.GetInsightsAsync(orgId.Value, dateRange);
+            var highIntentTask = DashboardService.GetHighIntentDataAsync(orgId.Value, dateRange);
+
+            await Task.WhenAll(kpisTask, chartTask, locationsTask, linksTask, insightsTask, highIntentTask);
+
+            _kpis = await kpisTask;
+            _chartData = await chartTask;
+            _topLocations = await locationsTask;
+            _topLinks = await linksTask;
+            _insights = await insightsTask;
+            _highIntent = await highIntentTask;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading dashboard: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnDateRangeChanged()
+    {
+        // Reset map interaction so it fits to new data
+        if (_mapInitialized)
+        {
+            await JSRuntime.InvokeVoidAsync("DataTouchMap.resetInteraction");
+        }
+        
+        await LoadDashboardData();
+        
+        // Update map with fresh fit (don't preserve view since data range changed)
+        if (_mapInitialized)
+        {
+            await UpdateMapMarkers(preserveView: false);
+        }
+    }
+
+    private async Task SetChartAggregation(ChartAggregation aggregation)
+    {
+        if (_chartAggregation == aggregation) return;
+        _chartAggregation = aggregation;
+
+        var orgId = AuthService.GetCurrentOrganizationId();
+        if (orgId.HasValue)
+        {
+            var dateRange = DashboardService.GetDateRangeFromOption(_selectedDateRange);
+            _chartData = await DashboardService.GetInteractionsVsLeadsChartAsync(orgId.Value, dateRange, _chartAggregation);
+            StateHasChanged();
+        }
+    }
+
+    private async Task SetLocationSort(LocationSortBy sortBy)
+    {
+        if (_locationSortBy == sortBy) return;
+        _locationSortBy = sortBy;
+
+        var orgId = AuthService.GetCurrentOrganizationId();
+        if (orgId.HasValue)
+        {
+            var dateRange = DashboardService.GetDateRangeFromOption(_selectedDateRange);
+            _topLocations = await DashboardService.GetTopLocationsAsync(orgId.Value, dateRange, _locationSortBy);
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateToLeads()
+    {
+        NavigationManager.NavigateTo("/leads");
+    }
+
+    private void NavigateToLead(Guid? leadId)
+    {
+        if (leadId.HasValue)
+        {
+            NavigationManager.NavigateTo($"/leads/{leadId}");
+        }
+    }
+
+    #region Chart Helpers
+
+    // Dual Y-axis max values
+    private int GetMaxInteractions() => _chartData.Any() 
+        ? Math.Max(10, (int)Math.Ceiling(_chartData.Max(d => d.Interactions) * 1.1 / 10) * 10) 
+        : 40;
+
+    private int GetMaxLeads() => _chartData.Any() 
+        ? Math.Max(5, (int)Math.Ceiling(_chartData.Max(d => d.Leads) * 1.1 / 5) * 5) 
+        : 24;
+
+    private double GetChartX(int index)
+    {
+        if (_chartData.Count <= 1) return 400;
+        var xStep = 700.0 / (_chartData.Count - 1);
+        return 50 + index * xStep;
+    }
+
+    private double GetChartYInteractions(int value)
+    {
+        var max = GetMaxInteractions();
+        if (max == 0) return 200;
+        return 200 - (value * 180.0 / max);
+    }
+
+    private double GetChartYLeads(int value)
+    {
+        var max = GetMaxLeads();
+        if (max == 0) return 200;
+        return 200 - (value * 180.0 / max);
+    }
+
+    private string GetInteractionsLinePath()
+    {
+        if (!_chartData.Any()) return "";
+        return string.Join(" ", _chartData.Select((d, i) => $"{GetChartX(i):F0},{GetChartYInteractions(d.Interactions):F0}"));
+    }
+
+    private string GetLeadsLinePath()
+    {
+        if (!_chartData.Any()) return "";
+        return string.Join(" ", _chartData.Select((d, i) => $"{GetChartX(i):F0},{GetChartYLeads(d.Leads):F0}"));
+    }
+
+    private string GetInteractionsAreaPath()
+    {
+        if (!_chartData.Any()) return "";
+        var points = string.Join(" L ", _chartData.Select((d, i) => $"{GetChartX(i):F0},{GetChartYInteractions(d.Interactions):F0}"));
+        return $"M {GetChartX(0):F0},200 L {points} L {GetChartX(_chartData.Count - 1):F0},200 Z";
+    }
+
+    private string GetLeadsAreaPath()
+    {
+        if (!_chartData.Any()) return "";
+        var points = string.Join(" L ", _chartData.Select((d, i) => $"{GetChartX(i):F0},{GetChartYLeads(d.Leads):F0}"));
+        return $"M {GetChartX(0):F0},200 L {points} L {GetChartX(_chartData.Count - 1):F0},200 Z";
+    }
+
+    private string GetXAxisLabel(DateTime date)
+    {
+        return _chartAggregation switch
+        {
+            ChartAggregation.Week => $"W{GetIsoWeekNumber(date)}",
+            ChartAggregation.Month => date.ToString("MMM"),
+            _ => date.ToString("ddd dd")
+        };
+    }
+
+    private int GetIsoWeekNumber(DateTime date)
+    {
+        var cal = System.Globalization.CultureInfo.InvariantCulture.Calendar;
+        return cal.GetWeekOfYear(date, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+    }
+
+    // Chart subtitle and update time
+    private string GetChartSubtitle()
+    {
+        return _selectedDateRange switch
+        {
+            "7d" => "Last 7 days",
+            "30d" => "Last 30 days",
+            "90d" => "Last 90 days",
+            _ => "Last 7 days"
+        };
+    }
+
+    private string GetLastUpdateTime()
+    {
+        var diff = DateTime.UtcNow - _lastDataUpdate;
+        if (diff.TotalMinutes < 1) return "just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} min ago";
+        return $"{(int)diff.TotalHours}h ago";
+    }
+
+    // KPI calculations
+    private int GetTotalInteractions() => _chartData.Sum(d => d.Interactions);
+    private int GetTotalLeads() => _chartData.Sum(d => d.Leads);
+    
+    private decimal GetConversionRate()
+    {
+        var interactions = GetTotalInteractions();
+        if (interactions == 0) return 0;
+        return (decimal)GetTotalLeads() / interactions * 100;
+    }
+
+    private decimal GetInteractionsDelta() => _kpis?.TotalInteractions.DeltaPercent ?? 0;
+    private decimal GetLeadsDelta() => _kpis?.LeadsCaptured.DeltaPercent ?? 0;
+    private decimal GetConversionDelta() => _kpis?.ConversionRate.DeltaPercent ?? 0;
+
+    // Tooltip helpers
+    private int GetTooltipLeft(int index)
+    {
+        // Calculate approximate position based on chart index
+        var containerWidth = 700; // Approximate chart width
+        var xPercent = _chartData.Count > 1 ? (double)index / (_chartData.Count - 1) : 0.5;
+        var baseLeft = 50 + (int)(xPercent * containerWidth);
+        
+        // Adjust for edges
+        if (index < _chartData.Count / 3) return baseLeft + 20;
+        if (index > _chartData.Count * 2 / 3) return baseLeft - 140;
+        return baseLeft - 60;
+    }
+
+    private string GetTooltipDate(DateTime date)
+    {
+        return date.ToString("ddd, MMM dd");
+    }
+
+    // Micro-insights
+    private string GetPeakDay()
+    {
+        if (!_chartData.Any()) return "N/A";
+        var peak = _chartData.OrderByDescending(d => d.Interactions).First();
+        return peak.Date.ToString("ddd dd");
+    }
+
+    private string GetLowestDay()
+    {
+        if (!_chartData.Any()) return "N/A";
+        var lowest = _chartData.OrderBy(d => d.Interactions).First();
+        return lowest.Date.ToString("ddd dd");
+    }
+
+    #endregion
+
+    #region Formatting Helpers
+
+    private string FormatNumber(decimal value)
+    {
+        return value >= 1000 ? $"{value / 1000:F1}K" : ((int)value).ToString();
+    }
+
+    private string FormatDelta(decimal delta)
+    {
+        var sign = delta >= 0 ? "+" : "";
+        return $"{sign}{delta:F1}%";
+    }
+
+    private string GetCtaBadgeClass(string? cta)
+    {
+        if (string.IsNullOrEmpty(cta)) return "badge-inactive";
+        return cta.ToLower() switch
+        {
+            "whatsapp" => "badge-whatsapp",
+            "email" or "gmail" => "badge-email",
+            "linkedin" => "badge-linkedin",
+            "call" or "phone" => "badge-call",
+            "calendar" or "meeting" or "booking" => "badge-calendar",
+            "instagram" => "badge-instagram",
+            "facebook" => "badge-facebook",
+            _ => "badge-default"
+        };
+    }
+
+    private string GetLinkBadgeClass(string linkName)
+    {
+        return linkName.ToLower() switch
+        {
+            "whatsapp" => "badge-whatsapp",
+            "email" or "gmail" => "badge-email",
+            "linkedin" => "badge-linkedin",
+            "call" or "phone" => "badge-call",
+            "calendar" or "meeting" or "booking" => "badge-calendar",
+            "instagram" => "badge-instagram",
+            "facebook" => "badge-facebook",
+            "twitter" or "x" => "badge-twitter",
+            "youtube" => "badge-youtube",
+            "portfolio" => "badge-portfolio",
+            "website" or "web" => "badge-website",
+            _ => "badge-default"
+        };
+    }
+
+    private string GetEventTypeBadgeClass(string eventType)
+    {
+        return eventType.ToLower() switch
+        {
+            "contact_save" or "contact_saved" => "badge-contact",
+            "form_submit" or "form_submitted" => "badge-form",
+            "cta_click" => "badge-default",
+            "page_view" or "card_open" => "badge-default",
+            "qr_scan" => "badge-qr",
+            "nfc_tap" => "badge-nfc",
+            _ => "badge-default"
+        };
+    }
+
+    private string GetEventTypeIcon(string eventType)
+    {
+        return eventType.ToLower() switch
+        {
+            "contact_save" or "contact_saved" => "contact_save",
+            "form_submit" or "form_submitted" => "form_submit",
+            "cta_click" => "link_click",
+            "page_view" or "card_open" or "card_opened" => "page_view",
+            "qr_scan" => "qr",
+            "nfc_tap" => "nfc",
+            _ => "link"
+        };
+    }
+
+    private (int x, int y) GetLocationCoords(string location)
+    {
+        // Simple approximation for demo - in production use proper geocoding
+        return location.ToLower() switch
+        {
+            var l when l.Contains("salvador") => (140, 95),
+            var l when l.Contains("usa") || l.Contains("united") => (100, 65),
+            var l when l.Contains("mexico") || l.Contains("méxico") => (110, 80),
+            var l when l.Contains("spain") || l.Contains("españa") => (200, 60),
+            var l when l.Contains("argentina") => (145, 140),
+            var l when l.Contains("colombia") => (135, 100),
+            _ => (180, 90)
+        };
+    }
+
+    private string GetInitials(string? name)
+    {
+        if (string.IsNullOrEmpty(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        return name[0].ToString().ToUpper();
+    }
+
+    #endregion
+
+    #region Cleanup
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_refreshTimer != null)
+        {
+            await _refreshTimer.DisposeAsync();
+        }
+        
+        if (_mapInitialized)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("DataTouchMap.destroy");
+            }
+            catch { /* Ignore errors during disposal */ }
+        }
+    }
+
+    #endregion
+}

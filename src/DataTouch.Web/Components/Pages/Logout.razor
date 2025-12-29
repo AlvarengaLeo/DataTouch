@@ -1,0 +1,9 @@
+@page "/logout"
+
+<PageTitle>Cerrando sesión...</PageTitle>
+
+<MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+
+<script>
+    window.location.href = '/api/auth/logout';
+</script>

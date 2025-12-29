@@ -1,0 +1,477 @@
+@using DataTouch.Web.Services
+@inject CountryPhoneService PhoneService
+
+<div class="country-phone-input @(HasError ? "has-error" : "") @(IsValid ? "is-valid" : "")">
+    <div class="phone-input-label">
+        <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" Class="label-icon" />
+        <span>Teléfono</span>
+        @if (Required)
+        {
+            <span class="required-asterisk">*</span>
+        }
+    </div>
+    
+    <div class="phone-input-container">
+        @* Country Selector *@
+        <div class="country-selector-wrapper">
+            <MudSelect T="string" 
+                       Value="@SelectedCountryCode"
+                       ValueChanged="@OnCountryChanged"
+                       Variant="Variant.Outlined"
+                       Class="country-selector"
+                       AnchorOrigin="Origin.BottomCenter"
+                       TransformOrigin="Origin.TopCenter"
+                       Dense="true">
+                @foreach (var country in _countries)
+                {
+                    <MudSelectItem Value="@country.Code">
+                        <div class="country-option">
+                            <span class="country-flag">@country.Flag</span>
+                            <span class="country-dial">@country.DialCode</span>
+                        </div>
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+        
+        @* National Number Input *@
+        <div class="phone-number-wrapper">
+            <input type="tel"
+                   class="phone-number-input"
+                   value="@_displayValue"
+                   placeholder="@_selectedCountry?.Placeholder"
+                   maxlength="@GetMaxInputLength()"
+                   @oninput="OnPhoneInput"
+                   @onfocus="OnFocus"
+                   @onblur="OnBlur"
+                   inputmode="numeric"
+                   pattern="[0-9]*"
+                   autocomplete="tel-national" />
+            
+            @if (IsValid)
+            {
+                <div class="input-status valid">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                </div>
+            }
+            else if (HasError && _isTouched)
+            {
+                <div class="input-status error">
+                    <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Small" />
+                </div>
+            }
+        </div>
+    </div>
+    
+    @* Feedback Row *@
+    <div class="phone-feedback-row">
+        @if (HasError && _isTouched)
+        {
+            <span class="error-message">@_validationResult?.ErrorMessage</span>
+        }
+        else if (_isFocused || !string.IsNullOrEmpty(_nationalNumber))
+        {
+            <span class="digit-counter @(_currentDigits == _requiredDigits ? "complete" : "")">
+                @_currentDigits/@_requiredDigits dígitos
+            </span>
+            @if (_selectedCountry != null && _currentDigits < _requiredDigits)
+            {
+                <span class="example-hint">Ej: @_selectedCountry.Placeholder</span>
+            }
+        }
+    </div>
+</div>
+
+<style>
+    /* ═══════════════════════════════════════════════════════════════════════════
+       DARK PREMIUM COUNTRY PHONE INPUT - Matches Public Card Design
+       ═══════════════════════════════════════════════════════════════════════════ */
+    
+    .country-phone-input {
+        margin-bottom: 14px;
+    }
+    
+    .phone-input-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.2;
+    }
+    
+    .phone-input-label .label-icon {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.9rem !important;
+        width: 16px !important;
+        height: 16px !important;
+    }
+    
+    .required-asterisk {
+        color: #F87171;
+        margin-left: 1px;
+    }
+    
+    .phone-input-container {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       COUNTRY SELECTOR - Dark Premium Style
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .country-selector-wrapper {
+        flex: 0 0 auto;
+        min-width: 110px;
+        height: 46px !important;
+    }
+    
+    .country-selector-wrapper .mud-select,
+    .country-selector-wrapper .mud-input-control,
+    .country-selector-wrapper .mud-input-control > .mud-input-control-input-container {
+        height: 46px !important;
+        min-height: 46px !important;
+        max-height: 46px !important;
+    }
+    
+    .country-selector-wrapper .mud-input-outlined-border {
+        border-radius: 12px !important;
+        border: 1.5px solid rgba(139, 92, 246, 0.35) !important;
+        background: rgba(25, 18, 45, 0.85) !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .country-selector-wrapper:hover .mud-input-outlined-border {
+        border-color: rgba(139, 92, 246, 0.55) !important;
+        background: rgba(35, 25, 60, 0.9) !important;
+    }
+    
+    .country-selector-wrapper:focus-within .mud-input-outlined-border {
+        border-color: #A78BFA !important;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2) !important;
+        background: rgba(35, 25, 60, 0.95) !important;
+    }
+    
+    .country-selector-wrapper .mud-input-root {
+        height: 46px !important;
+        min-height: 46px !important;
+        max-height: 46px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .country-selector-wrapper .mud-input-slot,
+    .country-selector-wrapper .mud-select-input {
+        padding: 8px 10px !important;
+        font-size: 0.875rem !important;
+        height: 46px !important;
+        line-height: 30px !important;
+        min-height: unset !important;
+        color: #FFFFFF !important;
+    }
+    
+    .country-selector-wrapper .mud-input-adornment {
+        margin: 0 !important;
+        padding: 0 4px !important;
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+    
+    .country-option {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.875rem;
+    }
+    
+    .country-flag {
+        font-size: 1.1rem;
+        line-height: 1;
+    }
+    
+    .country-dial {
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.85rem;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       PHONE NUMBER INPUT - Dark Premium Style
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .phone-number-wrapper {
+        flex: 1;
+        position: relative;
+    }
+    
+    .phone-number-input {
+        width: 100%;
+        height: 46px;
+        padding: 0 38px 0 14px;
+        font-size: 0.9375rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        color: #FFFFFF;
+        -webkit-text-fill-color: #FFFFFF;
+        background: rgba(25, 18, 45, 0.85);
+        border: 1.5px solid rgba(139, 92, 246, 0.35);
+        border-radius: 12px;
+        outline: none;
+        transition: all 0.2s ease;
+        caret-color: #A78BFA;
+    }
+    
+    .phone-number-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+        -webkit-text-fill-color: rgba(255, 255, 255, 0.4);
+        font-weight: 400;
+        letter-spacing: 0;
+    }
+    
+    .phone-number-input:hover {
+        border-color: rgba(139, 92, 246, 0.55);
+        background: rgba(35, 25, 60, 0.9);
+    }
+    
+    .phone-number-input:focus {
+        border-color: #A78BFA;
+        background: rgba(35, 25, 60, 0.95);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    }
+    
+    /* Valid State */
+    .country-phone-input.is-valid .phone-number-input {
+        border-color: rgba(34, 197, 94, 0.6);
+    }
+    
+    .country-phone-input.is-valid .phone-number-input:focus {
+        border-color: #22C55E;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+    }
+    
+    .country-phone-input.is-valid .country-selector-wrapper .mud-input-outlined-border {
+        border-color: rgba(34, 197, 94, 0.4) !important;
+    }
+    
+    /* Error State */
+    .country-phone-input.has-error .phone-number-input {
+        border-color: rgba(248, 113, 113, 0.6);
+    }
+    
+    .country-phone-input.has-error .phone-number-input:focus {
+        border-color: #F87171;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+    
+    .country-phone-input.has-error .country-selector-wrapper .mud-input-outlined-border {
+        border-color: rgba(248, 113, 113, 0.4) !important;
+    }
+    
+    /* Status Icon */
+    .input-status {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+    }
+    
+    .input-status .mud-icon-root {
+        font-size: 1.1rem !important;
+    }
+    
+    .input-status.valid {
+        color: #22C55E;
+    }
+    
+    .input-status.error {
+        color: #F87171;
+    }
+    
+    /* Feedback Row */
+    .phone-feedback-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 4px;
+        min-height: 18px;
+        padding: 0 2px;
+    }
+    
+    .digit-counter {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+    
+    .digit-counter.complete {
+        color: #22C55E;
+    }
+    
+    .example-hint {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+    
+    .error-message {
+        font-size: 0.75rem;
+        color: #F87171;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════════════════════════ */
+    @@media (max-width: 480px) {
+        .phone-input-container {
+            gap: 6px;
+        }
+        
+        .country-selector-wrapper {
+            min-width: 95px;
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    
+    [Parameter] public string CountryCode { get; set; } = "SV";
+    [Parameter] public EventCallback<string> CountryCodeChanged { get; set; }
+    
+    [Parameter] public string? E164Value { get; set; }
+    [Parameter] public EventCallback<string?> E164ValueChanged { get; set; }
+    
+    [Parameter] public bool Required { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsValidChanged { get; set; }
+    
+    private IReadOnlyList<CountryPhoneData> _countries = new List<CountryPhoneData>();
+    private CountryPhoneData? _selectedCountry;
+    private string _nationalNumber = "";
+    private string _displayValue = "";
+    private bool _isFocused = false;
+    private bool _isTouched = false;
+    
+    private PhoneValidationResult? _validationResult;
+    private int _currentDigits = 0;
+    private int _requiredDigits = 8;
+    
+    private string SelectedCountryCode => CountryCode;
+    private bool HasError => _validationResult != null && !_validationResult.IsValid && _isTouched && !string.IsNullOrEmpty(_nationalNumber);
+    private bool IsValid => _validationResult?.IsValid ?? false;
+    
+    protected override void OnInitialized()
+    {
+        _countries = PhoneService.GetAllCountries();
+        _selectedCountry = PhoneService.GetByCode(CountryCode) ?? PhoneService.GetDefaultCountry();
+        _requiredDigits = _selectedCountry?.MinLength ?? 8;
+        
+        // Initialize with existing value if provided
+        if (!string.IsNullOrEmpty(Value))
+        {
+            _nationalNumber = Value;
+            _displayValue = FormatDisplayValue(Value);
+            ValidatePhone();
+        }
+    }
+    
+    private async Task OnCountryChanged(string newCountryCode)
+    {
+        CountryCode = newCountryCode;
+        _selectedCountry = PhoneService.GetByCode(newCountryCode);
+        _requiredDigits = _selectedCountry?.MinLength ?? 8;
+        
+        await CountryCodeChanged.InvokeAsync(newCountryCode);
+        
+        // Re-validate with new country rules
+        ValidatePhone();
+        await NotifyValueChanges();
+    }
+    
+    private async Task OnPhoneInput(ChangeEventArgs e)
+    {
+        var input = e.Value?.ToString() ?? "";
+        
+        // Extract only digits
+        var digitsOnly = new string(input.Where(char.IsDigit).ToArray());
+        
+        // Enforce max length
+        var maxLength = _selectedCountry?.MaxLength ?? 15;
+        if (digitsOnly.Length > maxLength)
+        {
+            digitsOnly = digitsOnly.Substring(0, maxLength);
+        }
+        
+        _nationalNumber = digitsOnly;
+        _displayValue = FormatDisplayValue(digitsOnly);
+        _currentDigits = digitsOnly.Length;
+        
+        ValidatePhone();
+        await NotifyValueChanges();
+    }
+    
+    private void OnFocus()
+    {
+        _isFocused = true;
+    }
+    
+    private void OnBlur()
+    {
+        _isFocused = false;
+        _isTouched = true;
+    }
+    
+    private void ValidatePhone()
+    {
+        if (_selectedCountry == null) return;
+        
+        _validationResult = PhoneService.ValidatePhone(_selectedCountry.Code, _nationalNumber);
+        _currentDigits = _validationResult.CurrentLength;
+    }
+    
+    private async Task NotifyValueChanges()
+    {
+        // Notify national number
+        Value = _nationalNumber;
+        await ValueChanged.InvokeAsync(_nationalNumber);
+        
+        // Notify E.164 format (only if valid)
+        var e164 = IsValid ? _validationResult?.FormattedE164 : null;
+        await E164ValueChanged.InvokeAsync(e164);
+        
+        // Notify validity
+        await IsValidChanged.InvokeAsync(IsValid);
+    }
+    
+    private string FormatDisplayValue(string digits)
+    {
+        if (string.IsNullOrEmpty(digits)) return "";
+        
+        // Simple formatting: add space every 4 digits
+        var formatted = new System.Text.StringBuilder();
+        for (int i = 0; i < digits.Length; i++)
+        {
+            if (i > 0 && i % 4 == 0)
+            {
+                formatted.Append(' ');
+            }
+            formatted.Append(digits[i]);
+        }
+        return formatted.ToString();
+    }
+    
+    private int GetMaxInputLength()
+    {
+        // Account for spaces in formatted display
+        var maxDigits = _selectedCountry?.MaxLength ?? 15;
+        var spaces = (maxDigits - 1) / 4;
+        return maxDigits + spaces;
+    }
+}

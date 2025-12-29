@@ -1,0 +1,192 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   IconRegistry Styles - Enterprise Icon System
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: 1;
+}
+
+.icon-svg {
+    display: block;
+    flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   ICON BADGES - Circular container for icons
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.icon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: all var(--dt-transition-fast, 150ms ease);
+}
+
+/* Default badge style */
+.badge-default {
+    background: var(--dt-bg-subtle, #0E141B);
+    border: 1px solid var(--dt-border-default, #233044);
+}
+
+/* Brand-specific badge colors */
+.badge-whatsapp {
+    background: rgba(37, 211, 102, 0.12);
+    color: #25D366;
+    border: 1px solid rgba(37, 211, 102, 0.2);
+}
+
+.badge-linkedin {
+    background: rgba(10, 102, 194, 0.12);
+    color: #0A66C2;
+    border: 1px solid rgba(10, 102, 194, 0.2);
+}
+
+.badge-instagram {
+    background: linear-gradient(135deg, rgba(253, 29, 29, 0.1), rgba(131, 58, 180, 0.1));
+    color: #E4405F;
+    border: 1px solid rgba(228, 64, 95, 0.2);
+}
+
+.badge-facebook {
+    background: rgba(24, 119, 242, 0.12);
+    color: #1877F2;
+    border: 1px solid rgba(24, 119, 242, 0.2);
+}
+
+.badge-twitter,
+.badge-x {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--dt-text-primary, #E5E7EB);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.badge-youtube {
+    background: rgba(255, 0, 0, 0.1);
+    color: #FF0000;
+    border: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+.badge-tiktok {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--dt-text-primary, #E5E7EB);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.badge-telegram {
+    background: rgba(0, 136, 204, 0.12);
+    color: #0088CC;
+    border: 1px solid rgba(0, 136, 204, 0.2);
+}
+
+.badge-email {
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--dt-primary-400, #818CF8);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.badge-call {
+    background: rgba(20, 184, 166, 0.12);
+    color: var(--dt-accent-teal-400, #2DD4BF);
+    border: 1px solid rgba(20, 184, 166, 0.2);
+}
+
+.badge-calendar {
+    background: rgba(167, 139, 250, 0.12);
+    color: #A78BFA;
+    border: 1px solid rgba(167, 139, 250, 0.2);
+}
+
+.badge-portfolio {
+    background: rgba(251, 191, 36, 0.12);
+    color: #FBBF24;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.badge-website {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--dt-primary-400, #818CF8);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.badge-contact {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10B981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.badge-form {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3B82F6;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.badge-time {
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--dt-primary-400, #818CF8);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.badge-inactive {
+    background: rgba(107, 114, 128, 0.12);
+    color: var(--dt-text-muted, #6B7280);
+    border: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+.badge-qr {
+    background: rgba(139, 92, 246, 0.12);
+    color: #8B5CF6;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.badge-nfc {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22C55E;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.badge-lead {
+    background: rgba(14, 165, 233, 0.12);
+    color: #0EA5E9;
+    border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.badge-location {
+    background: rgba(239, 68, 68, 0.12);
+    color: #EF4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Hover effects for interactive badges */
+.icon-badge:hover {
+    transform: scale(1.05);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SIZE VARIANTS
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.icon-sm .icon-svg {
+    width: 14px;
+    height: 14px;
+}
+
+.icon-md .icon-svg {
+    width: 18px;
+    height: 18px;
+}
+
+.icon-lg .icon-svg {
+    width: 22px;
+    height: 22px;
+}
+
+.icon-xl .icon-svg {
+    width: 28px;
+    height: 28px;
+}

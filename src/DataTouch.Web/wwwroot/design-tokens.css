@@ -1,0 +1,161 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   DataTouch Design System - Design Tokens
+   Version: 1.0.0
+   
+   Enterprise Dark + Tech Premium Visual Identity
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ══════════════════════════════════════════════════════════════════════════
+       BASE BACKGROUNDS
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-bg-app: #0B0F14;
+    --dt-bg-subtle: #0E141B;
+    --dt-surface-1: #111827;
+    --dt-surface-2: #162234;
+    --dt-surface-3: #1B2B40;
+    --dt-border-default: #233044;
+    --dt-border-strong: #2E3E57;
+    --dt-overlay-scrim: rgba(0, 0, 0, 0.5);
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       TEXT COLORS
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-text-primary: #E5E7EB;
+    --dt-text-secondary: #9CA3AF;
+    --dt-text-muted: #6B7280;
+    --dt-text-inverse: #0B0F14;
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       PRIMARY (INDIGO) - CTA & Brand
+       The ONLY color for primary CTAs across the entire system
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-primary-50: #EEF2FF;
+    --dt-primary-100: #E0E7FF;
+    --dt-primary-200: #C7D2FE;
+    --dt-primary-300: #A5B4FC;
+    --dt-primary-400: #818CF8;
+    --dt-primary-500: #6366F1;
+    --dt-primary-600: #4F46E5;  /* ← Main CTA color */
+    --dt-primary-700: #4338CA;
+    --dt-primary-800: #3730A3;
+    --dt-primary-900: #312E81;
+    --dt-on-primary: #FFFFFF;
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       NAVY ANCHOR - Deep backgrounds
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-navy-700: #0B1F3B;
+    --dt-navy-800: #081A31;
+    --dt-navy-900: #061225;
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       ACCENT TEAL - Minimal use, secondary highlights only
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-accent-teal-400: #2DD4BF;
+    --dt-accent-teal-500: #14B8A6;
+    --dt-accent-teal-600: #0D9488;
+    --dt-on-accent: #061225;
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       SEMANTIC COLORS
+       CRITICAL: These are for system states ONLY - NEVER for CTAs
+       - Success: "Saved", "Applied", "Synced" confirmations
+       - Danger: Errors, failures, destructive states
+       - Warning: Caution states, pending actions
+       - Info: Neutral information
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-success: #16A34A;
+    --dt-success-bg: rgba(22, 163, 74, 0.1);
+    --dt-success-border: rgba(22, 163, 74, 0.3);
+    
+    --dt-warning: #D97706;
+    --dt-warning-bg: rgba(217, 119, 6, 0.1);
+    --dt-warning-border: rgba(217, 119, 6, 0.3);
+    
+    --dt-danger: #DC2626;
+    --dt-danger-bg: rgba(220, 38, 38, 0.1);
+    --dt-danger-border: rgba(220, 38, 38, 0.3);
+    
+    --dt-info: #2563EB;
+    --dt-info-bg: rgba(37, 99, 235, 0.1);
+    --dt-info-border: rgba(37, 99, 235, 0.3);
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       UI INTERACTION STATES
+       Applied to all interactive elements consistently
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-focus-ring: #818CF8;
+    --dt-focus-ring-offset: 2px;
+    --dt-hover-surface: #17243A;
+    --dt-pressed-surface: #0E1828;
+    --dt-selected-bg: #1E2240;
+    --dt-disabled-bg: #0E141B;
+    --dt-disabled-text: #6B7280;
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       CHIPS & BADGES
+       Only display when providing real information value
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-chip-bg: #121B2A;
+    --dt-chip-border: #233044;
+    --dt-chip-text: #D1D5DB;
+    --dt-badge-new: #4F46E5;
+    --dt-badge-popular: #14B8A6;
+    --dt-badge-high-conversion: #D97706;
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       CHART PALETTE
+       Ordered for visual distinction and accessibility
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-chart-1: #6366F1;
+    --dt-chart-2: #14B8A6;
+    --dt-chart-3: #A78BFA;
+    --dt-chart-4: #60A5FA;
+    --dt-chart-5: #F59E0B;
+    --dt-chart-6: #34D399;
+    --dt-chart-7: #F87171;
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       TYPOGRAPHY
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --dt-font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       SPACING & SIZING
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-radius-sm: 4px;
+    --dt-radius-md: 8px;
+    --dt-radius-lg: 12px;
+    --dt-radius-xl: 16px;
+    --dt-radius-full: 9999px;
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       SHADOWS (for dark theme - subtle elevation)
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --dt-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --dt-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+    --dt-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       TRANSITIONS
+       ══════════════════════════════════════════════════════════════════════════ */
+    --dt-transition-fast: 150ms ease;
+    --dt-transition-normal: 250ms ease;
+    --dt-transition-slow: 350ms ease;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   GLOBAL FOCUS STYLES (WCAG AA Compliant)
+   ══════════════════════════════════════════════════════════════════════════════ */
+*:focus-visible {
+    outline: 2px solid var(--dt-focus-ring);
+    outline-offset: var(--dt-focus-ring-offset);
+}
+
+/* Remove default focus for mouse users */
+*:focus:not(:focus-visible) {
+    outline: none;
+}

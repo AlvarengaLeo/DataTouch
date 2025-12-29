@@ -1,0 +1,1265 @@
+@page "/p/{OrgSlug}/{CardSlug}"
+@layout EmptyLayout
+@inject DataTouchDbContext DbContext
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<MudThemeProvider Theme="_theme" />
+<MudSnackbarProvider />
+
+<PageTitle>@(_card?.FullName ?? "Tarjeta") - DataTouch</PageTitle>
+
+@if (_isLoading)
+{
+    <div class="loading-container">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (_card == null || _organization == null)
+{
+    <div class="error-container">
+        <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+        <MudText Typo="Typo.h5" Class="mt-4 text-white">Tarjeta no encontrada</MudText>
+        <MudText Typo="Typo.body1" Class="text-white-70">La tarjeta que buscas no existe o está desactivada.</MudText>
+    </div>
+}
+else
+{
+    @* ═══════════════════════════════════════════════════════════════════════════
+       LANDING PÚBLICA - ESTRUCTURA EN 3 BLOQUES
+       Fondo continuo en gradient, sin cortes blancos
+       ═══════════════════════════════════════════════════════════════════════════ *@
+    <div class="landing-wrapper">
+        
+        @* ─────────────────────────────────────────────────────────────────────────
+           BLOQUE 1: HERO / PERFIL
+           Card principal con foto, nombre, puesto, bio y links
+           ───────────────────────────────────────────────────────────────────────── *@
+        <div class="profile-card">
+            <div class="card-header-gradient"></div>
+            <div class="card-content">
+                @* Avatar *@
+                <div class="avatar-container">
+                    @if (!string.IsNullOrEmpty(_card.ProfileImageUrl))
+                    {
+                        <MudAvatar Class="profile-avatar">
+                            <MudImage Src="@_card.ProfileImageUrl" Alt="@_card.FullName" />
+                        </MudAvatar>
+                    }
+                    else
+                    {
+                        <MudAvatar Color="Color.Primary" Class="profile-avatar">
+                            @_card.FullName?.FirstOrDefault()
+                        </MudAvatar>
+                    }
+                </div>
+
+                @* Info principal *@
+                <MudText Typo="Typo.h5" Class="profile-name">@_card.FullName</MudText>
+                <MudText Typo="Typo.subtitle1" Class="profile-title">@_card.Title</MudText>
+                <div class="profile-location">
+                    <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" />
+                    <span>@GetDisplayCompanyName()</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_card.Bio))
+                {
+                    <MudText Typo="Typo.body2" Class="profile-bio">@_card.Bio</MudText>
+                }
+
+                @* Links y Redes Sociales - Dinámico desde JSON *@
+                @if (_socialLinks != null && _socialLinks.HasAnyLink())
+                {
+                    <div class="social-row">
+                        @if (!string.IsNullOrEmpty(_socialLinks.LinkedIn))
+                        {
+                            <MudIconButton Icon="@Icons.Custom.Brands.LinkedIn" Size="Size.Medium" 
+                                           Class="social-icon" OnClick="@(() => OpenSocialLink(_socialLinks.LinkedIn))" />
+                        }
+                        @if (!string.IsNullOrEmpty(_socialLinks.Instagram))
+                        {
+                            <MudIconButton Icon="@Icons.Custom.Brands.Instagram" Size="Size.Medium" 
+                                           Class="social-icon" OnClick="@(() => OpenSocialLink(_socialLinks.Instagram))" />
+                        }
+                        @if (!string.IsNullOrEmpty(_socialLinks.Twitter))
+                        {
+                            <MudIconButton Icon="@Icons.Custom.Brands.Twitter" Size="Size.Medium" 
+                                           Class="social-icon" OnClick="@(() => OpenSocialLink(_socialLinks.Twitter))" />
+                        }
+                        @if (!string.IsNullOrEmpty(_socialLinks.YouTube))
+                        {
+                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" Size="Size.Medium" 
+                                           Class="social-icon" OnClick="@(() => OpenSocialLink(_socialLinks.YouTube))" />
+                        }
+                    </div>
+                }
+
+                @* Status Chips *@
+                <div class="status-chips">
+                    <span class="status-chip">
+                        <span class="chip-dot"></span>
+                        Disponible
+                    </span>
+                    <span class="status-chip">
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                        Responde &lt; 1h
+                    </span>
+                    <span class="status-chip">
+                        <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
+                        El Salvador
+                    </span>
+                </div>
+
+                @* ─────────────────────────────────────────────────────────────────────
+                   BLOQUE 2: CTAs / ACCIONES RÁPIDAS
+                   Integrados DENTRO de la card, no como sección aparte
+                   ───────────────────────────────────────────────────────────────────── *@
+                <div class="cta-section">
+                    @* Botón primario: Guardar contacto - respetar flag *@
+                    @if (_card.ShowSaveContact)
+                    {
+                        <MudButton Variant="Variant.Filled" FullWidth="true" 
+                                   Class="btn-primary-cta" OnClick="@DownloadVCard"
+                                   StartIcon="@Icons.Material.Filled.PersonAdd">
+                            Guardar Contacto
+                        </MudButton>
+                    }
+
+                    @* Fila de botones secundarios - respetar flags *@
+                    <div class="cta-row">
+                        @if (_card.ShowWhatsApp && !string.IsNullOrEmpty(_card.WhatsAppNumber))
+                        {
+                            <MudButton Variant="Variant.Filled" Class="btn-whatsapp"
+                                       Href="@($"https://wa.me/{GetFullWhatsAppForLink()}")"
+                                       Target="_blank" StartIcon="@Icons.Custom.Brands.WhatsApp">
+                                WhatsApp
+                            </MudButton>
+                        }
+                        @if (_card.ShowCall && !string.IsNullOrEmpty(_card.Phone))
+                        {
+                            <MudButton Variant="Variant.Filled" Class="btn-call"
+                                       Href="@($"tel:{GetFullPhoneForLink()}")"
+                                       StartIcon="@Icons.Material.Filled.Phone">
+                                Llamar
+                            </MudButton>
+                        }
+                        @if (_card.ShowEmail && !string.IsNullOrEmpty(_card.Email))
+                        {
+                            <MudButton Variant="Variant.Filled" Class="btn-email"
+                                       Href="@($"mailto:{_card.Email}")"
+                                       StartIcon="@Icons.Material.Filled.Email">
+                                Email
+                            </MudButton>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ─────────────────────────────────────────────────────────────────────────
+           BLOQUE 3: FORMULARIO DE LEAD PREMIUM
+           Diseño enterprise-grade con validación avanzada de teléfono
+           ───────────────────────────────────────────────────────────────────────── *@
+        <div class="lead-form-card @(_showSuccess ? "success-state" : "")">
+            @if (_showSuccess)
+            {
+                @* Success Overlay Animation *@
+                <div class="success-overlay">
+                    <div class="success-icon-container">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Class="success-icon" />
+                    </div>
+                    <MudText Typo="Typo.h6" Class="success-title">¡Gracias por contactarme!</MudText>
+                    <MudText Typo="Typo.body2" Class="success-message">
+                        Me pondré en contacto contigo muy pronto.
+                    </MudText>
+                    <MudButton Variant="Variant.Text" Class="success-btn" OnClick="@ResetForm">
+                        Enviar otro mensaje
+                    </MudButton>
+                </div>
+            }
+            else
+            {
+                <div class="form-header">
+                    <div class="form-header-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.MailOutline" Size="Size.Medium" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h6" Class="form-title">¿Quieres que te contacte?</MudText>
+                        <MudText Typo="Typo.caption" Class="form-subtitle">Déjame tus datos y te respondo pronto</MudText>
+                    </div>
+                </div>
+                
+                <EditForm Model="_contactForm" OnValidSubmit="SubmitContact" class="premium-form">
+                    <DataAnnotationsValidator />
+                    
+                    @* Nombre Completo *@
+                    <div class="compact-field">
+                        <label class="compact-label">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Class="label-icon" />
+                            Nombre completo <span class="required">*</span>
+                        </label>
+                        <MudTextField @bind-Value="_contactForm.FullName" 
+                                      Variant="Variant.Outlined"
+                                      Placeholder="Juan Pérez"
+                                      Class="compact-input"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      Error="@(!string.IsNullOrEmpty(_nameError))"
+                                      ErrorText="@_nameError"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@(IsNameValid ? Icons.Material.Filled.CheckCircle : "")"
+                                      AdornmentColor="Color.Success" />
+                    </div>
+                    
+                    @* Email *@
+                    <div class="compact-field">
+                        <label class="compact-label">
+                            <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Class="label-icon" />
+                            Correo electrónico <span class="required">*</span>
+                        </label>
+                        <MudTextField @bind-Value="_contactForm.Email" 
+                                      Variant="Variant.Outlined"
+                                      Placeholder="tu@email.com"
+                                      InputType="InputType.Email"
+                                      Class="compact-input"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      Error="@(!string.IsNullOrEmpty(_emailError))"
+                                      ErrorText="@_emailError"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@(IsEmailValid ? Icons.Material.Filled.CheckCircle : "")"
+                                      AdornmentColor="Color.Success" />
+                    </div>
+                    
+                    @* Teléfono con selector de país *@
+                    <CountryPhoneInput @bind-Value="_contactForm.Phone"
+                                       @bind-CountryCode="_contactForm.PhoneCountryCode"
+                                       @bind-E164Value="_contactForm.PhoneE164"
+                                       Required="true"
+                                       IsValidChanged="@(valid => _isPhoneValid = valid)" />
+                    
+                    @* Mensaje Opcional *@
+                    <div class="compact-field">
+                        <label class="compact-label">
+                            <MudIcon Icon="@Icons.Material.Filled.Message" Size="Size.Small" Class="label-icon" />
+                            Mensaje <span class="optional">(opcional)</span>
+                        </label>
+                        <MudTextField @bind-Value="_contactForm.Message" 
+                                      Variant="Variant.Outlined"
+                                      Placeholder="¿En qué puedo ayudarte?"
+                                      Lines="2"
+                                      Class="compact-input compact-textarea"
+                                      Margin="Margin.Dense" />
+                    </div>
+                    
+                    @* Submit Button with States *@
+                    <button type="submit" 
+                            class="premium-submit-btn @GetSubmitButtonClass()" 
+                            disabled="@(!CanSubmit)">
+                        @if (_isSubmitting)
+                        {
+                            <span class="btn-spinner"></span>
+                            <span>Enviando...</span>
+                        }
+                        else if (_submitError)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                            <span>Error, intenta de nuevo</span>
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+                            <span>Enviar mensaje</span>
+                        }
+                    </button>
+                    
+                    @if (_submitError)
+                    {
+                        <div class="submit-error-hint">
+                            <MudText Typo="Typo.caption" Color="Color.Error">
+                                Ocurrió un problema. Por favor, verifica tus datos e intenta nuevamente.
+                            </MudText>
+                        </div>
+                    }
+                </EditForm>
+            }
+        </div>
+
+        @* Footer mínimo *@
+        <div class="footer-minimal">
+            <MudText Typo="Typo.caption">Powered by <strong>DataTouch</strong></MudText>
+        </div>
+    </div>
+}
+
+<style>
+    /* ═══════════════════════════════════════════════════════════════════════════
+       ESTILOS GLOBALES - GRADIENT CONTINUO SIN CORTES
+       ═══════════════════════════════════════════════════════════════════════════ */
+    
+    /* FORCE WHITE TEXT IN ALL MUDBLAZOR INPUTS - HIGHEST PRIORITY */
+    .landing-wrapper .mud-input-slot,
+    .landing-wrapper .mud-input > input,
+    .landing-wrapper .mud-input-text > input,
+    .landing-wrapper .mud-input textarea,
+    .landing-wrapper input.mud-input-slot,
+    .landing-wrapper textarea.mud-input-slot,
+    .landing-wrapper .mud-input-control input,
+    .landing-wrapper .mud-input-control textarea,
+    .lead-form-card .mud-input-slot,
+    .lead-form-card .mud-input > input,
+    .lead-form-card .mud-input textarea,
+    .lead-form-card input,
+    .lead-form-card textarea {
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+        caret-color: #A78BFA !important;
+        opacity: 1 !important;
+    }
+    
+    html, body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    .loading-container, .error-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(180deg, #0d0a1a 0%, #1a1035 40%, #2d1b4e 70%, #1a1035 100%);
+    }
+
+    .text-white { color: #fff !important; }
+    .text-white-70 { color: rgba(255,255,255,0.7) !important; }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       WRAPPER PRINCIPAL - FONDO GRADIENT OSCURO PREMIUM
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .landing-wrapper {
+        min-height: 100vh;
+        background: linear-gradient(180deg, #0d0a1a 0%, #1a1035 30%, #2d1b4e 60%, #1a1035 100%);
+        padding: 32px 16px 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Aurora glow effect at bottom */
+    .landing-wrapper::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 50%;
+        background: radial-gradient(ellipse at center bottom, rgba(168, 85, 247, 0.15) 0%, transparent 60%),
+                    radial-gradient(ellipse at 30% 90%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       BLOQUE 1: PROFILE CARD (HERO) - GLASSMORPHISM
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .profile-card {
+        width: 100%;
+        max-width: 420px;
+        background: rgba(45, 27, 78, 0.65);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 28px;
+        border: 1px solid rgba(139, 92, 246, 0.25);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                    inset 0 0 80px rgba(139, 92, 246, 0.05);
+        position: relative;
+        z-index: 1;
+        overflow: visible;
+    }
+
+    .card-header-gradient {
+        display: none; /* Remove the old header - mockup has no header gradient */
+    }
+
+    .card-content {
+        padding: 40px 28px 28px;
+        text-align: center;
+    }
+
+    /* Avatar with Glow Ring */
+    .avatar-container {
+        margin-top: 0;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .profile-avatar {
+        width: 110px !important;
+        height: 110px !important;
+        font-size: 2.5rem !important;
+        background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #7C3AED 100%) !important;
+        border: 4px solid rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.3),
+                    0 0 40px rgba(139, 92, 246, 0.4),
+                    0 8px 24px rgba(0, 0, 0, 0.3) !important;
+        color: white !important;
+    }
+
+    .profile-avatar .mud-avatar-img {
+        border-radius: 50%;
+    }
+
+    /* Info - White text for dark theme */
+    .profile-name {
+        font-weight: 700 !important;
+        font-size: 1.75rem !important;
+        color: #FFFFFF !important;
+        margin-bottom: 6px !important;
+        letter-spacing: -0.02em;
+    }
+
+    .profile-title {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-size: 1rem !important;
+        font-weight: 400 !important;
+        margin-bottom: 8px !important;
+    }
+
+    .profile-location {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+        margin: 0 0 16px;
+    }
+
+    .profile-location .mud-icon-root {
+        font-size: 1rem !important;
+        opacity: 0.7;
+    }
+
+    .profile-bio {
+        color: rgba(255, 255, 255, 0.85) !important;
+        font-size: 0.9375rem !important;
+        line-height: 1.6 !important;
+        max-width: 340px;
+        margin: 0 auto 20px;
+    }
+
+    /* Redes sociales - fila compacta */
+    .social-row {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .social-icon {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.8) !important;
+        transition: all 0.2s ease !important;
+        border-radius: 12px !important;
+    }
+
+    .social-icon:hover {
+        background: rgba(139, 92, 246, 0.3) !important;
+        color: #fff !important;
+        transform: scale(1.05);
+    }
+
+    /* Status Chips */
+    .status-chips {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .status-chip .mud-icon-root {
+        font-size: 0.875rem !important;
+        opacity: 0.7;
+    }
+
+    .chip-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #22C55E;
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       BLOQUE 2: CTAs - INTEGRADOS EN LA CARD
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .cta-section {
+        border-top: none;
+        padding-top: 8px;
+        margin-top: 0;
+    }
+
+    .btn-primary-cta {
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #7C3AED 100%) !important;
+        color: #fff !important;
+        font-weight: 600 !important;
+        text-transform: none !important;
+        border-radius: 14px !important;
+        padding: 16px 24px !important;
+        font-size: 1rem !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4) !important;
+        letter-spacing: 0.01em;
+    }
+
+    .btn-primary-cta:hover {
+        box-shadow: 0 6px 28px rgba(139, 92, 246, 0.55) !important;
+        transform: translateY(-2px);
+    }
+
+    .cta-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: nowrap;
+    }
+
+    .cta-row .mud-button-root {
+        flex: 1;
+        min-width: 95px;
+        max-width: 120px;
+        border-radius: 12px !important;
+        text-transform: none !important;
+        font-weight: 500 !important;
+        padding: 12px 16px !important;
+        font-size: 0.875rem !important;
+    }
+
+    /* WhatsApp - Outlined Green */
+    .btn-whatsapp {
+        background: transparent !important;
+        border: 2px solid #25D366 !important;
+        color: #25D366 !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .btn-whatsapp:hover {
+        background: rgba(37, 211, 102, 0.15) !important;
+        border-color: #2EE575 !important;
+    }
+
+    .btn-whatsapp .mud-icon-root {
+        color: #25D366 !important;
+    }
+
+    /* Llamar - Outlined Purple */
+    .btn-call {
+        background: transparent !important;
+        border: 2px solid #8B5CF6 !important;
+        color: #A78BFA !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .btn-call:hover {
+        background: rgba(139, 92, 246, 0.15) !important;
+        border-color: #A78BFA !important;
+    }
+
+    .btn-call .mud-icon-root {
+        color: #A78BFA !important;
+    }
+
+    /* Email - Outlined Orange */
+    .btn-email {
+        background: transparent !important;
+        border: 2px solid #F59E0B !important;
+        color: #FBBF24 !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .btn-email:hover {
+        background: rgba(245, 158, 11, 0.15) !important;
+        border-color: #FBBF24 !important;
+    }
+
+    .btn-email .mud-icon-root {
+        color: #FBBF24 !important;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       BLOQUE 3: FORMULARIO DE LEAD - DARK THEME INTEGRATED
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .lead-form-card {
+        width: 100%;
+        max-width: 420px;
+        background: transparent;
+        padding: 24px 0 0;
+        position: relative;
+        margin-top: -8px; /* Connect to profile card */
+    }
+    
+    .lead-form-card.success-state {
+        background: rgba(16, 185, 129, 0.2);
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    /* Form Header */
+    .form-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+        padding-bottom: 0;
+        border-bottom: none;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .form-header-icon {
+        display: none;
+    }
+    
+    .form-header .mud-icon-root {
+        font-size: 1rem !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    .form-title {
+        color: rgba(255, 255, 255, 0.95) !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
+    }
+    
+    .form-subtitle {
+        color: rgba(255, 255, 255, 0.5) !important;
+        font-size: 0.8rem !important;
+        margin-bottom: 16px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       COMPACT PREMIUM FORM FIELDS - Dense but elegant
+       Target: 42px inputs, 12px gaps, consistent density
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .premium-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .compact-field {
+        margin-bottom: 14px;
+    }
+    
+    .compact-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.2;
+    }
+    
+    .compact-label .label-icon {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.9rem !important;
+        width: 16px !important;
+        height: 16px !important;
+    }
+    
+    .compact-label .required {
+        color: #F87171;
+        margin-left: 1px;
+    }
+    
+    .compact-label .optional {
+        color: rgba(255, 255, 255, 0.4);
+        font-weight: 400;
+        font-size: 0.75rem;
+    }
+    
+    /* Dark Theme Input Styling - Premium Form Fields */
+    .compact-input .mud-input-outlined-border {
+        border-radius: 12px !important;
+        border: 1.5px solid rgba(139, 92, 246, 0.35) !important;
+        background: rgba(25, 18, 45, 0.85) !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .compact-input:hover .mud-input-outlined-border {
+        border-color: rgba(139, 92, 246, 0.55) !important;
+        background: rgba(35, 25, 60, 0.9) !important;
+    }
+    
+    .compact-input:focus-within .mud-input-outlined-border {
+        border-color: #A78BFA !important;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2) !important;
+        background: rgba(35, 25, 60, 0.95) !important;
+    }
+    
+    .compact-input .mud-input-root {
+        height: 46px !important;
+        min-height: 46px !important;
+    }
+    
+    .compact-input .mud-input-slot {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        font-size: 0.9375rem !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.2px !important;
+        color: #FFFFFF !important;
+    }
+    
+    .compact-input .mud-input-root-outlined .mud-input-slot {
+        padding: 10px 14px !important;
+    }
+    
+    .compact-input .mud-input-adornment-end {
+        color: #22C55E !important;
+        margin-right: 6px !important;
+    }
+    
+    .compact-input .mud-input-adornment-end .mud-icon-root {
+        font-size: 1.1rem !important;
+    }
+
+    /* Force pure white text in ALL form inputs */
+    .premium-form input,
+    .premium-form textarea,
+    .premium-form .mud-input-slot,
+    .premium-form .mud-input input,
+    .premium-form .mud-input textarea,
+    .compact-input input,
+    .compact-input textarea,
+    .compact-input .mud-input-slot,
+    .compact-input .mud-input-slot input,
+    .compact-input .mud-input-slot textarea,
+    .lead-form-card input,
+    .lead-form-card textarea,
+    .lead-form-card .mud-input-slot {
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+        caret-color: #A78BFA !important;
+        opacity: 1 !important;
+    }
+
+    .premium-form input::placeholder,
+    .premium-form textarea::placeholder,
+    .compact-input input::placeholder,
+    .compact-input textarea::placeholder,
+    .lead-form-card input::placeholder,
+    .lead-form-card textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+        -webkit-text-fill-color: rgba(255, 255, 255, 0.4) !important;
+        font-weight: 400 !important;
+        opacity: 1 !important;
+    }
+    
+    /* Compact Textarea - 2 lines, ~60px */
+    .compact-input.compact-textarea .mud-input-root {
+        height: auto !important;
+        min-height: 56px !important;
+    }
+    
+    .compact-input.compact-textarea .mud-input-slot {
+        padding: 10px 12px !important;
+    }
+    
+    /* Override MudBlazor default margins in dense mode */
+    .compact-input.mud-input-control {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .compact-input .mud-input-helper-text {
+        font-size: 0.7rem !important;
+        margin-top: 2px !important;
+        min-height: 16px;
+    }
+    
+    /* Submit Button - Teal/Cyan gradient */
+    .premium-submit-btn {
+        width: 100%;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
+        color: #fff;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 16px rgba(20, 184, 166, 0.35);
+        margin-top: 8px;
+    }
+    
+    .premium-submit-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(20, 184, 166, 0.5);
+    }
+    
+    .premium-submit-btn:active:not(:disabled) {
+        transform: translateY(0);
+    }
+    
+    .premium-submit-btn.disabled,
+    .premium-submit-btn:disabled {
+        background: rgba(75, 85, 99, 0.5);
+        color: rgba(255, 255, 255, 0.4);
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+    
+    .premium-submit-btn.loading {
+        background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
+        cursor: wait;
+    }
+    
+    .premium-submit-btn.error {
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    }
+    
+    /* Button Spinner */
+    .btn-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .submit-error-hint {
+        text-align: center;
+        margin-top: 12px;
+    }
+    
+    /* Success Overlay */
+    .success-overlay {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 32px 16px;
+        animation: fadeIn 0.4s ease;
+    }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    
+    .success-icon-container {
+        width: 80px;
+        height: 80px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    @@keyframes popIn {
+        0% { transform: scale(0); }
+        80% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .success-icon {
+        color: #fff !important;
+        font-size: 2.5rem !important;
+    }
+    
+    .success-title {
+        color: #fff !important;
+        font-weight: 700 !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .success-message {
+        color: rgba(255,255,255,0.9) !important;
+        margin-bottom: 24px !important;
+    }
+    
+    .success-btn {
+        color: #fff !important;
+        font-weight: 500 !important;
+        text-transform: none !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
+    }
+    
+    .success-btn:hover {
+        background: rgba(255,255,255,0.15) !important;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       FOOTER MÍNIMO
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .footer-minimal {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.4);
+        padding-top: 24px;
+        font-size: 0.8rem;
+    }
+
+    .footer-minimal strong {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       RESPONSIVE - MOBILE FIRST
+       ═══════════════════════════════════════════════════════════════════════════ */
+    @@media (max-width: 480px) {
+        .landing-wrapper {
+            padding: 16px 12px 32px;
+            gap: 20px;
+        }
+
+        .profile-card, .lead-form-card {
+            border-radius: 20px;
+        }
+
+        .card-header-gradient {
+            height: 70px;
+        }
+
+        .avatar-container {
+            margin-top: -40px;
+        }
+
+        .profile-avatar {
+            width: 80px !important;
+            height: 80px !important;
+        }
+
+        .card-content {
+            padding: 0 16px 20px;
+        }
+
+        .cta-row .mud-button-root {
+            min-width: 90px;
+            font-size: 0.8rem !important;
+            padding: 8px 10px !important;
+        }
+
+        .lead-form-card {
+            padding: 20px 16px;
+        }
+    }
+
+    /* Desktop - Cards más anchas */
+    @@media (min-width: 768px) {
+        .landing-wrapper {
+            padding: 40px 24px 60px;
+        }
+
+        .profile-card, .lead-form-card {
+            max-width: 440px;
+        }
+
+        .cta-row .mud-button-root {
+            min-width: 120px;
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public string OrgSlug { get; set; } = "";
+    [Parameter] public string CardSlug { get; set; } = "";
+
+    private Card? _card;
+    private Organization? _organization;
+    private bool _isLoading = true;
+    private bool _isSubmitting = false;
+    private bool _showSuccess = false;
+    private bool _submitError = false;
+    private bool _isPhoneValid = false;
+    private ContactFormModel _contactForm = new();
+    
+    // Field validation errors
+    private string? _nameError = null;
+    private string? _emailError = null;
+    
+    // Computed properties for validation
+    private bool IsNameValid => !string.IsNullOrWhiteSpace(_contactForm.FullName) && _contactForm.FullName.Length >= 2;
+    private bool IsEmailValid => !string.IsNullOrWhiteSpace(_contactForm.Email) && 
+                                  System.Text.RegularExpressions.Regex.IsMatch(_contactForm.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+    private bool CanSubmit => !_isSubmitting && IsNameValid && IsEmailValid && _isPhoneValid;
+    
+    // Deserialized JSON fields
+    private SocialLinksModel? _socialLinks;
+    private List<WebsiteLinkModel> _websiteLinks = new();
+
+    private MudTheme _theme = new()
+    {
+        PaletteDark = new PaletteDark()
+        {
+            Primary = "#8B5CF6",
+            Secondary = "#A78BFA",
+            Background = "#0d0a1a",
+            Surface = "#19122d",
+            TextPrimary = "#FFFFFF",
+            TextSecondary = "#B3B3B3",
+            TextDisabled = "#666666",
+            ActionDefault = "#FFFFFF",
+            ActionDisabled = "#4D4D4D",
+            ActionDisabledBackground = "#1A1A1A",
+            DrawerText = "#FFFFFF",
+            DrawerIcon = "#B3B3B3",
+            LinesDefault = "#3D2866",
+            LinesInputs = "#3D2866",
+            Divider = "#2D1B4E",
+        },
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#8B5CF6",
+            Secondary = "#A78BFA",
+            TextPrimary = "#FFFFFF",
+            TextSecondary = "#B3B3B3",
+        }
+    };
+
+    private class ContactFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre es requerido")]
+        public string FullName { get; set; } = "";
+        
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El email es requerido")]
+        [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "Email no válido")]
+        public string Email { get; set; } = "";
+        
+        public string Phone { get; set; } = "";
+        public string PhoneCountryCode { get; set; } = "SV";
+        public string? PhoneE164 { get; set; }
+        
+        public string? Message { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _organization = await DbContext.Organizations
+            .FirstOrDefaultAsync(o => o.Slug == OrgSlug && o.IsActive);
+
+        if (_organization != null)
+        {
+            _card = await DbContext.Cards
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.OrganizationId == _organization.Id && c.Slug == CardSlug && c.IsActive);
+            
+            if (_card != null)
+            {
+                DeserializeJsonFields();
+            }
+        }
+        _isLoading = false;
+    }
+    
+    private void DeserializeJsonFields()
+    {
+        // Social Links
+        if (!string.IsNullOrEmpty(_card?.SocialLinksJson))
+        {
+            try
+            {
+                _socialLinks = System.Text.Json.JsonSerializer.Deserialize<SocialLinksModel>(_card.SocialLinksJson);
+            }
+            catch { _socialLinks = null; }
+        }
+
+        // Website Links
+        if (!string.IsNullOrEmpty(_card?.WebsiteLinksJson))
+        {
+            try
+            {
+                _websiteLinks = System.Text.Json.JsonSerializer.Deserialize<List<WebsiteLinkModel>>(_card.WebsiteLinksJson) ?? new();
+            }
+            catch { _websiteLinks = new(); }
+        }
+    }
+    
+    private string GetDisplayCompanyName()
+    {
+        if (!string.IsNullOrEmpty(_card?.CompanyName))
+            return _card.CompanyName;
+        return _organization?.Name ?? "";
+    }
+
+    private async Task DownloadVCard()
+    {
+        if (_card == null) return;
+
+        var vcard = $@"BEGIN:VCARD
+VERSION:3.0
+FN:{_card.FullName}
+TITLE:{_card.Title}
+TEL:{GetFullPhoneForLink()}
+EMAIL:{_card.Email}
+ORG:{_organization?.Name}
+END:VCARD";
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(vcard);
+        var base64 = Convert.ToBase64String(bytes);
+        var fileName = $"{_card.FullName?.Replace(" ", "_")}.vcf";
+
+        await JSRuntime.InvokeVoidAsync("eval", $@"
+            var link = document.createElement('a');
+            link.href = 'data:text/vcard;base64,{base64}';
+            link.download = '{fileName}';
+            link.click();
+        ");
+        Snackbar.Add("Contacto guardado", Severity.Success);
+    }
+
+    private async Task OpenSocialLink(string url)
+    {
+        await JSRuntime.InvokeVoidAsync("open", url, "_blank");
+    }
+
+    private async Task SubmitContact()
+    {
+        if (_card == null || _organization == null) return;
+        if (!CanSubmit) return;
+
+        _isSubmitting = true;
+        _submitError = false;
+        
+        try
+        {
+            var lead = new Lead
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = _organization.Id,
+                CardId = _card.Id,
+                OwnerUserId = _card.UserId,
+                FullName = _contactForm.FullName.Trim(),
+                Email = _contactForm.Email.Trim().ToLowerInvariant(),
+                Phone = _contactForm.Phone,
+                PhoneCountryCode = GetDialCodeFromCountryCode(_contactForm.PhoneCountryCode),
+                PhoneE164 = _contactForm.PhoneE164,
+                Message = _contactForm.Message?.Trim(),
+                Source = "CARD_CONTACT_FORM",
+                Status = "New",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            DbContext.Leads.Add(lead);
+            await DbContext.SaveChangesAsync();
+
+            // Show success animation
+            _showSuccess = true;
+            _isSubmitting = false;
+        }
+        catch
+        {
+            _submitError = true;
+            _isSubmitting = false;
+        }
+    }
+    
+    private string GetDialCodeFromCountryCode(string countryCode)
+    {
+        // Map country codes to dial codes
+        var dialCodes = new Dictionary<string, string>
+        {
+            { "SV", "+503" }, { "GT", "+502" }, { "HN", "+504" }, { "NI", "+505" },
+            { "CR", "+506" }, { "PA", "+507" }, { "BZ", "+501" }, { "MX", "+52" },
+            { "US", "+1" }, { "CA", "+1" }, { "CO", "+57" }, { "PE", "+51" },
+            { "AR", "+54" }, { "CL", "+56" }, { "EC", "+593" }, { "VE", "+58" },
+            { "BO", "+591" }, { "PY", "+595" }, { "UY", "+598" }, { "DO", "+1" },
+            { "PR", "+1" }, { "CU", "+53" }, { "ES", "+34" }, { "FR", "+33" },
+            { "DE", "+49" }, { "IT", "+39" }, { "GB", "+44" }, { "PT", "+351" }
+        };
+        return dialCodes.TryGetValue(countryCode, out var dial) ? dial : "+503";
+    }
+    
+    private void ResetForm()
+    {
+        _contactForm = new ContactFormModel();
+        _showSuccess = false;
+        _submitError = false;
+        _isPhoneValid = false;
+    }
+    
+    private string GetSubmitButtonClass()
+    {
+        if (_isSubmitting) return "loading";
+        if (_submitError) return "error";
+        if (!CanSubmit) return "disabled";
+        return "ready";
+    }
+    
+    // ViewModels for JSON fields
+    private class SocialLinksModel
+    {
+        public string? LinkedIn { get; set; }
+        public string? Instagram { get; set; }
+        public string? YouTube { get; set; }
+        public string? Twitter { get; set; }
+
+        public bool HasAnyLink()
+        {
+            return !string.IsNullOrEmpty(LinkedIn) ||
+                   !string.IsNullOrEmpty(Instagram) ||
+                   !string.IsNullOrEmpty(YouTube) ||
+                   !string.IsNullOrEmpty(Twitter);
+        }
+    }
+
+    private class WebsiteLinkModel
+    {
+        public string Title { get; set; } = "";
+        public string Url { get; set; } = "";
+    }
+    private string GetFullPhoneForLink()
+    {
+        if (_card == null) return "";
+        var code = _card.PhoneCountryCode ?? "";
+        var number = _card.Phone?.Replace(" ", "").Replace("-", "") ?? "";
+        return $"{code}{number}";
+    }
+
+    private string GetFullWhatsAppForLink() 
+    {
+        if (_card == null) return "";
+        var code = _card.WhatsAppCountryCode?.Replace("+", "") ?? ""; // WA expects 52... not +52
+        var number = _card.WhatsAppNumber?.Replace(" ", "").Replace("-", "") ?? "";
+        return $"{code}{number}";
+    }
+}

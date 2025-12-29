@@ -1,0 +1,1119 @@
+@page "/leads/{Id:guid}"
+@attribute [Authorize]
+@inject DataTouchDbContext DbContext
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Detalle de Lead - DataTouch</PageTitle>
+
+@if (_lead == null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    <div class="lead-detail-container">
+        @* ═══════════════════════════════════════════════════════════════
+           NAVEGACIÓN
+           ═══════════════════════════════════════════════════════════════ *@
+        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" 
+                   Href="/leads" Class="mb-4" Color="Color.Primary">
+            Volver a Leads
+        </MudButton>
+
+        <MudGrid Spacing="4">
+            @* ═══════════════════════════════════════════════════════════════
+               COLUMNA PRINCIPAL (IZQUIERDA)
+               ═══════════════════════════════════════════════════════════════ *@
+            <MudItem xs="12" md="8">
+                <div class="lead-sections">
+                    
+                    @* ─────────────────────────────────────────────────────────
+                       A) IDENTIDAD DEL LEAD
+                       ───────────────────────────────────────────────────────── *@
+                    <section class="section-card section-identity">
+                        <div class="section-header">
+                            <div class="section-icon identity-icon">
+                                <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Medium" />
+                            </div>
+                            <div class="section-header-text">
+                                <h3 class="section-title">Identidad</h3>
+                                <p class="section-description">Información principal del lead</p>
+                            </div>
+                        </div>
+                        <div class="section-content identity-content">
+                            <MudText Typo="Typo.h4" Class="lead-name">@_lead.FullName</MudText>
+                            <MudChip T="string" Color="@GetStatusColor(_lead.Status)" Size="Size.Large" 
+                                     Variant="Variant.Filled" Class="status-badge">
+                                @GetStatusLabel(_lead.Status)
+                            </MudChip>
+                        </div>
+                    </section>
+
+                    @* ─────────────────────────────────────────────────────────
+                       B) INFORMACIÓN DE CONTACTO
+                       ───────────────────────────────────────────────────────── *@
+                    <section class="section-card">
+                        <div class="section-header">
+                            <div class="section-icon contact-icon">
+                                <MudIcon Icon="@Icons.Material.Filled.ContactPhone" Size="Size.Medium" />
+                            </div>
+                            <div class="section-header-text">
+                                <h3 class="section-title">Información de contacto</h3>
+                                <p class="section-description">Datos para comunicación directa</p>
+                            </div>
+                        </div>
+                        <div class="section-content">
+                            <div class="contact-grid">
+                                <div class="contact-item">
+                                    <span class="contact-label">Email</span>
+                                    <MudLink Href="@($"mailto:{_lead.Email}")" Class="contact-value">
+                                        <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" />
+                                        @_lead.Email
+                                    </MudLink>
+                                </div>
+                                <div class="contact-item">
+                                    <span class="contact-label">Teléfono</span>
+                                    @if (!string.IsNullOrEmpty(_lead.Phone))
+                                    {
+                                        <MudLink Href="@($"tel:{_lead.Phone}")" Class="contact-value">
+                                            <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" />
+                                            @_lead.Phone
+                                        </MudLink>
+                                    }
+                                    else
+                                    {
+                                        <span class="contact-value empty">No registrado</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="meta-grid">
+                                <div class="meta-item">
+                                    <MudIcon Icon="@Icons.Material.Filled.CreditCard" Size="Size.Small" />
+                                    <span class="meta-label">Tarjeta de origen</span>
+                                    <span class="meta-value">@(_lead.Card?.FullName ?? "N/A")</span>
+                                </div>
+                                <div class="meta-item">
+                                    <MudIcon Icon="@Icons.Material.Filled.Source" Size="Size.Small" />
+                                    <span class="meta-label">Fuente</span>
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@_lead.Source</MudChip>
+                                </div>
+                                <div class="meta-item">
+                                    <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Small" />
+                                    <span class="meta-label">Creado</span>
+                                    <span class="meta-value">@_lead.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+
+                    @* ─────────────────────────────────────────────────────────
+                       C) DETALLES DE LA CONSULTA
+                       ───────────────────────────────────────────────────────── *@
+                    <section class="section-card">
+                        <div class="section-header">
+                            <div class="section-icon message-icon">
+                                <MudIcon Icon="@Icons.Material.Filled.ChatBubble" Size="Size.Medium" />
+                            </div>
+                            <div class="section-header-text">
+                                <h3 class="section-title">Detalles de la consulta</h3>
+                                <p class="section-description">Mensaje enviado por el lead</p>
+                            </div>
+                        </div>
+                        <div class="section-content">
+                            <div class="message-box">
+                                @if (!string.IsNullOrEmpty(_lead.Message))
+                                {
+                                    <MudText Typo="Typo.body1">@_lead.Message</MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="empty-message">
+                                        <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+                                        Sin mensaje
+                                    </MudText>
+                                }
+                            </div>
+                        </div>
+                    </section>
+
+                    @* ─────────────────────────────────────────────────────────
+                       D) ESTADO DEL LEAD
+                       ───────────────────────────────────────────────────────── *@
+                    <section class="section-card">
+                        <div class="section-header">
+                            <div class="section-icon pipeline-icon">
+                                <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Medium" />
+                            </div>
+                            <div class="section-header-text">
+                                <h3 class="section-title">Estado del lead</h3>
+                                <p class="section-description">Seguimiento del proceso comercial</p>
+                            </div>
+                        </div>
+                        <div class="section-content">
+                            <MudSelect T="string" @bind-Value="_lead.Status" Label="Estado actual" 
+                                       Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter"
+                                       Class="status-select">
+                                <MudSelectItem Value="@("New")">
+                                    <div class="status-option">
+                                        <MudIcon Icon="@Icons.Material.Filled.FiberNew" Color="Color.Info" Size="Size.Small" />
+                                        <span>Nuevo</span>
+                                    </div>
+                                </MudSelectItem>
+                                <MudSelectItem Value="@("Contacted")">
+                                    <div class="status-option">
+                                        <MudIcon Icon="@Icons.Material.Filled.Phone" Color="Color.Warning" Size="Size.Small" />
+                                        <span>Contactado</span>
+                                    </div>
+                                </MudSelectItem>
+                                <MudSelectItem Value="@("Qualified")">
+                                    <div class="status-option">
+                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                                        <span>Calificado</span>
+                                    </div>
+                                </MudSelectItem>
+                                <MudSelectItem Value="@("Closed")">
+                                    <div class="status-option">
+                                        <MudIcon Icon="@Icons.Material.Filled.DoneAll" Color="Color.Default" Size="Size.Small" />
+                                        <span>Cerrado</span>
+                                    </div>
+                                </MudSelectItem>
+                                <MudSelectItem Value="@("Lost")">
+                                    <div class="status-option">
+                                        <MudIcon Icon="@Icons.Material.Filled.Block" Color="Color.Error" Size="Size.Small" />
+                                        <span>Perdido</span>
+                                    </div>
+                                </MudSelectItem>
+                            </MudSelect>
+                        </div>
+                    </section>
+
+
+                    @* ─────────────────────────────────────────────────────────
+                       E) NOTAS INTERNAS
+                       ───────────────────────────────────────────────────────── *@
+                    <section class="section-card section-notes">
+                        <div class="section-header">
+                            <div class="section-icon notes-icon">
+                                <MudIcon Icon="@Icons.Material.Filled.StickyNote2" Size="Size.Medium" />
+                            </div>
+                            <div class="section-header-text">
+                                <h3 class="section-title">Notas internas</h3>
+                                <p class="section-description">Observaciones del equipo · No visibles para el cliente</p>
+                            </div>
+                        </div>
+                        <div class="section-content">
+                            @* Zona de creación *@
+                            <div class="note-create-zone">
+                                <MudTextField @bind-Value="_newNoteText" 
+                                              Variant="Variant.Outlined" Lines="3"
+                                              Placeholder="Escribe una nota sobre este lead..."
+                                              Counter="2000" MaxLength="2000" Class="mb-2"
+                                              Disabled="_isAddingNote" />
+                                <div class="note-create-actions">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @if (!string.IsNullOrWhiteSpace(_newNoteText))
+                                        {
+                                            <span>@_newNoteText.Trim().Length caracteres</span>
+                                        }
+                                    </MudText>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                                               OnClick="AddNote" Size="Size.Medium"
+                                               Disabled="_isAddingNote"
+                                               StartIcon="@(_isAddingNote ? null : Icons.Material.Filled.Add)">
+                                        @if (_isAddingNote)
+                                        {
+                                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                            <span>Guardando...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Agregar nota</span>
+                                        }
+                                    </MudButton>
+                                </div>
+                            </div>
+
+                    @* Feedback elegante *@
+                    @if (_noteAdded)
+                    {
+                        <div class="note-success-feedback mb-3">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Class="mr-2" />
+                            <span>Nota agregada correctamente</span>
+                        </div>
+                    }
+                    @if (_noteError)
+                    {
+                        <div class="note-error-feedback mb-3">
+                            <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Small" Class="mr-2" />
+                            <span>No se pudo agregar la nota, intenta de nuevo</span>
+                        </div>
+                    }
+
+                    @* ─────── GRID DE NOTAS ─────── *@
+                    @if (_notes.Any())
+                    {
+                        <div class="notes-grid-header mb-3">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">
+                                Mis notas
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @_notes.Count @(_notes.Count == 1 ? "nota" : "notas")
+                            </MudText>
+                        </div>
+                        <div class="notes-grid">
+                            @{ var noteIndex = 0; }
+                            @foreach (var note in _notes)
+                            {
+                                var colorClass = GetNoteColorClass(noteIndex);
+                                var isEditing = _editingNoteId == note.Id;
+                                var currentNote = note; // Capture for closure
+                                
+                                <div class="note-card-v2 @colorClass @(isEditing ? "editing" : "")">
+                                    @if (isEditing)
+                                    {
+                                        @* Modo edición *@
+                                        <div class="note-edit-mode">
+                                            <MudTextField @bind-Value="_editingContent" 
+                                                          Variant="Variant.Outlined" Lines="4"
+                                                          Placeholder="Edita tu nota..."
+                                                          Counter="2000" MaxLength="2000" Class="mb-2"
+                                                          Disabled="_isSavingEdit"
+                                                          Style="background: rgba(255,255,255,0.5);" />
+                                            <div class="note-edit-actions">
+                                                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Default"
+                                                           OnClick="CancelEdit" Disabled="_isSavingEdit">
+                                                    Cancelar
+                                                </MudButton>
+                                                <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary"
+                                                           OnClick="@(() => SaveEdit(currentNote))" Disabled="_isSavingEdit">
+                                                    @if (_isSavingEdit)
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
+                                                        <span>Guardando...</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="mr-1" />
+                                                        <span>Guardar</span>
+                                                    }
+                                                </MudButton>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        @* Modo visualización *@
+                                        <div class="note-card-v2-header">
+                                            <div class="note-card-v2-icon" @onclick="@(() => StartEdit(currentNote))">
+                                                <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" />
+                                            </div>
+                                        </div>
+                                        <div class="note-card-v2-body">
+                                            <MudText Typo="Typo.body2" Class="note-card-v2-text">@note.Content</MudText>
+                                        </div>
+                                        <div class="note-card-v2-footer">
+                                            <div class="note-card-v2-meta">
+                                                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                                                <span>@GetRelativeTime(note.CreatedAt)</span>
+                                            </div>
+                                            <span class="note-card-v2-author">@(note.CreatedBy?.FullName ?? "Usuario")</span>
+                                        </div>
+                                    }
+                                </div>
+                                noteIndex++;
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="notes-empty-state">
+                            <div class="empty-state-icon">
+                                <MudIcon Icon="@Icons.Material.Outlined.NoteAdd" Size="Size.Large" />
+                            </div>
+                            <MudText Typo="Typo.body1" Class="mt-3">Agrega tu primera nota</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Las notas te ayudan a dar seguimiento a este lead
+                            </MudText>
+                        </div>
+                    }
+                        </div>
+                    </section>
+                </div>
+            </MudItem>
+
+            @* ═══════════════════════════════════════════════════════════════
+               COLUMNA SECUNDARIA (DERECHA): ACCIONES RÁPIDAS
+               ═══════════════════════════════════════════════════════════════ *@
+            <MudItem xs="12" md="4">
+                <div class="sidebar-sticky">
+                    <section class="section-card section-actions">
+                        <div class="section-header">
+                            <div class="section-icon actions-icon">
+                                <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Medium" />
+                            </div>
+                            <div class="section-header-text">
+                                <h3 class="section-title">Acciones rápidas</h3>
+                                <p class="section-description">Contacto inmediato con el lead</p>
+                            </div>
+                        </div>
+                        <div class="section-content actions-content">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
+                                       FullWidth="true" Class="action-btn" Size="Size.Large"
+                                       StartIcon="@Icons.Material.Filled.Email"
+                                       Href="@($"mailto:{_lead.Email}")" Target="_blank">
+                                Enviar Email
+                            </MudButton>
+
+                            @if (!string.IsNullOrEmpty(_lead.Phone))
+                            {
+                                <MudButton Variant="Variant.Outlined" Color="Color.Info" 
+                                           FullWidth="true" Class="action-btn" Size="Size.Large"
+                                           StartIcon="@Icons.Material.Filled.Phone"
+                                           Href="@($"tel:{_lead.Phone}")">
+                                    Llamar
+                                </MudButton>
+
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" 
+                                           FullWidth="true" Class="action-btn" Size="Size.Large"
+                                           StartIcon="@Icons.Material.Filled.Chat"
+                                           Href="@($"https://wa.me/{_lead.Phone.Replace(" ", "").Replace("-", "")}")" 
+                                           Target="_blank">
+                                    WhatsApp
+                                </MudButton>
+                            }
+                        </div>
+                        
+                        <MudDivider Class="my-4" />
+                        
+                        <div class="sidebar-summary">
+                            <MudText Typo="Typo.overline" Color="Color.Secondary" Class="mb-2">RESUMEN</MudText>
+                            <div class="summary-row">
+                                <span class="summary-label">Creado hace</span>
+                                <span class="summary-value">@GetTimeAgo(_lead.CreatedAt)</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Estado</span>
+                                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_lead.Status)" 
+                                         Variant="Variant.Text">@GetStatusLabel(_lead.Status)</MudChip>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </MudItem>
+        </MudGrid>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Lead? _lead;
+    private List<LeadNote> _notes = new();
+    private string _newNoteText = "";
+    private bool _isAddingNote = false;
+    private bool _noteAdded = false;
+    private bool _noteError = false;
+    private string _originalStatus = "";
+    
+    // Edit mode state
+    private Guid? _editingNoteId = null;
+    private string _editingContent = "";
+    private bool _isSavingEdit = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var orgId = AuthService.GetCurrentOrganizationId();
+        if (orgId.HasValue)
+        {
+            _lead = await DbContext.Leads
+                .Include(l => l.Card)
+                .FirstOrDefaultAsync(l => l.Id == Id && l.OrganizationId == orgId.Value);
+            
+            if (_lead != null)
+            {
+                _originalStatus = _lead.Status;
+                await LoadNotes();
+            }
+        }
+    }
+
+    private async Task LoadNotes()
+    {
+        if (_lead == null) return;
+        
+        _notes = await DbContext.LeadNotes
+            .Where(n => n.LeadId == _lead.Id)
+            .Include(n => n.CreatedBy)
+            .OrderByDescending(n => n.CreatedAt)
+            .ToListAsync();
+    }
+
+    private async Task AddNote()
+    {
+        if (_lead == null || string.IsNullOrWhiteSpace(_newNoteText)) return;
+        
+        _isAddingNote = true;
+        _noteAdded = false;
+        _noteError = false;
+        StateHasChanged();
+        
+        try
+        {
+            var userId = AuthService.GetCurrentUserId();
+            if (!userId.HasValue) throw new Exception("Usuario no autenticado");
+            
+            var note = new LeadNote
+            {
+                Id = Guid.NewGuid(),
+                LeadId = _lead.Id,
+                CreatedByUserId = userId.Value,
+                Content = _newNoteText.Trim(),
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            DbContext.LeadNotes.Add(note);
+            await DbContext.SaveChangesAsync();
+            
+            // Reload notes to get user info
+            await LoadNotes();
+            
+            // Clear textarea and show success
+            _newNoteText = "";
+            _noteAdded = true;
+            
+            // Auto-hide success message after 3 seconds
+            _ = Task.Delay(3000).ContinueWith(_ =>
+            {
+                _noteAdded = false;
+                InvokeAsync(StateHasChanged);
+            });
+        }
+        catch (Exception)
+        {
+            _noteError = true;
+        }
+        finally
+        {
+            _isAddingNote = false;
+            StateHasChanged();
+        }
+    }
+
+    private void StartEdit(LeadNote note)
+    {
+        _editingNoteId = note.Id;
+        _editingContent = note.Content;
+        StateHasChanged();
+    }
+
+    private void CancelEdit()
+    {
+        _editingNoteId = null;
+        _editingContent = "";
+        StateHasChanged();
+    }
+
+    private async Task SaveEdit(LeadNote note)
+    {
+        if (string.IsNullOrWhiteSpace(_editingContent))
+        {
+            CancelEdit();
+            return;
+        }
+        
+        _isSavingEdit = true;
+        StateHasChanged();
+        
+        try
+        {
+            note.Content = _editingContent.Trim();
+            DbContext.Entry(note).State = EntityState.Modified;
+            await DbContext.SaveChangesAsync();
+            
+            // Reset edit mode
+            _editingNoteId = null;
+            _editingContent = "";
+            
+            // Show success feedback
+            _noteAdded = true;
+            _ = Task.Delay(2000).ContinueWith(_ =>
+            {
+                _noteAdded = false;
+                InvokeAsync(StateHasChanged);
+            });
+            
+            // Reload to refresh the UI
+            await LoadNotes();
+        }
+        catch (Exception)
+        {
+            _noteError = true;
+        }
+        finally
+        {
+            _isSavingEdit = false;
+            StateHasChanged();
+        }
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "New" => Color.Info,         // Azul
+            "Contacted" => Color.Warning, // Naranja
+            "Qualified" => Color.Success, // Verde
+            "Closed" => Color.Default,    // Gris
+            "Lost" => Color.Default,      // Gris
+            _ => Color.Default
+        };
+    }
+
+    private string GetStatusLabel(string status)
+    {
+        return status switch
+        {
+            "New" => "Nuevo",
+            "Contacted" => "Contactado",
+            "Qualified" => "Calificado",
+            "Closed" => "Cerrado",
+            "Lost" => "Perdido",
+            _ => status
+        };
+    }
+
+    private string GetTimeAgo(DateTime date)
+    {
+        var timeSpan = DateTime.UtcNow - date;
+        
+        if (timeSpan.TotalDays >= 1)
+            return $"{(int)timeSpan.TotalDays} día{(timeSpan.TotalDays >= 2 ? "s" : "")}";
+        if (timeSpan.TotalHours >= 1)
+            return $"{(int)timeSpan.TotalHours} hora{(timeSpan.TotalHours >= 2 ? "s" : "")}";
+        if (timeSpan.TotalMinutes >= 1)
+            return $"{(int)timeSpan.TotalMinutes} minuto{(timeSpan.TotalMinutes >= 2 ? "s" : "")}";
+        
+        return "ahora mismo";
+    }
+
+    private string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "U";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        return parts[0][0].ToString().ToUpper();
+    }
+
+    private string GetRelativeTime(DateTime date)
+    {
+        var localDate = date.ToLocalTime();
+        var timeSpan = DateTime.Now - localDate;
+        
+        if (timeSpan.TotalMinutes < 1)
+            return "Ahora mismo";
+        if (timeSpan.TotalMinutes < 60)
+            return $"Hace {(int)timeSpan.TotalMinutes} min";
+        if (timeSpan.TotalHours < 24)
+            return $"Hace {(int)timeSpan.TotalHours}h";
+        if (timeSpan.TotalDays < 7)
+            return $"Hace {(int)timeSpan.TotalDays} día{((int)timeSpan.TotalDays > 1 ? "s" : "")}";
+        
+        return localDate.ToString("dd MMM yyyy, HH:mm");
+    }
+
+    private string GetNoteColorClass(int index)
+    {
+        var colors = new[] { "note-blue", "note-yellow", "note-pink", "note-mint", "note-lavender" };
+        return colors[index % colors.Length];
+    }
+}
+
+<style>
+    /* ═══════════════════════════════════════════════════════════════
+       LEAD DETAIL - PREMIUM CRM STYLES
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .lead-detail-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .lead-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       SECTION CARD PATTERN
+       ───────────────────────────────────────────────────────── */
+    .section-card {
+        background: var(--mud-palette-surface);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid var(--mud-palette-lines-default);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .section-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .section-header-text {
+        flex: 1;
+    }
+
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: var(--mud-palette-text-primary);
+    }
+
+    .section-description {
+        font-size: 0.875rem;
+        margin: 0;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .section-content {
+        margin-top: 16px;
+    }
+
+    /* Icon Colors - using chart palette */
+    .identity-icon { background: linear-gradient(135deg, #6366F1, #4F46E5); } /* primary */
+    .contact-icon { background: linear-gradient(135deg, #14B8A6, #0D9488); } /* accent-teal */
+    .message-icon { background: linear-gradient(135deg, #F59E0B, #D97706); } /* warning */
+    .pipeline-icon { background: linear-gradient(135deg, #A78BFA, #7C3AED); } /* chart-3 */
+    .notes-icon { background: linear-gradient(135deg, #F87171, #DC2626); } /* chart-7/danger */
+    .actions-icon { background: linear-gradient(135deg, #60A5FA, #2563EB); } /* chart-4/info */
+
+    /* ─────────────────────────────────────────────────────────
+       A) IDENTITY SECTION
+       ───────────────────────────────────────────────────────── */
+    .section-identity {
+        background: linear-gradient(135deg, var(--mud-palette-surface), var(--mud-palette-background-grey));
+    }
+
+    .identity-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .lead-name {
+        font-weight: 700;
+        color: var(--mud-palette-text-primary);
+    }
+
+    .status-badge {
+        font-weight: 600;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       B) CONTACT SECTION
+       ───────────────────────────────────────────────────────── */
+    .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    @@media (max-width: 600px) {
+        .contact-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .contact-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .contact-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .contact-value {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--mud-palette-text-primary);
+    }
+
+    .contact-value.empty {
+        color: var(--mud-palette-text-secondary);
+        font-style: italic;
+    }
+
+    .meta-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--mud-palette-lines-default);
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+    }
+
+    .meta-label {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .meta-value {
+        font-weight: 500;
+        color: var(--mud-palette-text-primary);
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       C) MESSAGE SECTION
+       ───────────────────────────────────────────────────────── */
+    .message-box {
+        background: var(--mud-palette-background-grey);
+        border-radius: 12px;
+        padding: 20px;
+        min-height: 60px;
+    }
+
+    .empty-message {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-style: italic;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       D) STATUS SECTION
+       ───────────────────────────────────────────────────────── */
+    .status-select {
+        max-width: 300px;
+    }
+
+    .status-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       E) NOTES SECTION
+       ───────────────────────────────────────────────────────── */
+    .section-notes {
+        min-height: 300px;
+    }
+
+    .note-create-zone {
+        padding: 20px;
+        border-radius: 12px;
+        background: var(--mud-palette-background-grey);
+        border: 1px dashed var(--mud-palette-lines-default);
+        margin-bottom: 20px;
+    }
+
+    .note-create-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .note-add-btn {
+        min-width: 140px;
+    }
+
+    /* Feedback elegante - using semantic tokens */
+    .note-success-feedback {
+        display: flex;
+        align-items: center;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: rgba(22, 163, 74, 0.1);
+        color: #16A34A;
+        font-size: 0.875rem;
+        animation: fadeInSlide 0.3s ease-out;
+    }
+
+    .note-error-feedback {
+        display: flex;
+        align-items: center;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: rgba(220, 38, 38, 0.1);
+        color: #DC2626;
+        font-size: 0.875rem;
+    }
+
+    @@keyframes fadeInSlide {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       GRID DE NOTAS - ESTILO INSPIRACIÓN
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .notes-grid-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .notes-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    @@media (max-width: 768px) {
+        .notes-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .note-card-v2 {
+        border-radius: 16px;
+        padding: 16px;
+        min-height: 160px;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .note-card-v2:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Pastel Colors */
+    .note-blue {
+        background: linear-gradient(145deg, #dbeafe, #bfdbfe);
+        border: 1px solid #93c5fd;
+    }
+    .note-yellow {
+        background: linear-gradient(145deg, #fef9c3, #fef08a);
+        border: 1px solid #fde047;
+    }
+    .note-pink {
+        background: linear-gradient(145deg, #fce7f3, #fbcfe8);
+        border: 1px solid #f9a8d4;
+    }
+    .note-mint {
+        background: linear-gradient(145deg, #d1fae5, #a7f3d0);
+        border: 1px solid #6ee7b7;
+    }
+    .note-lavender {
+        background: linear-gradient(145deg, #ede9fe, #ddd6fe);
+        border: 1px solid #c4b5fd;
+    }
+
+    .note-card-v2-header {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 8px;
+    }
+
+    .note-card-v2-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.2s ease;
+    }
+
+    .note-card-v2:hover .note-card-v2-icon {
+        opacity: 1;
+    }
+
+    .note-card-v2-body {
+        flex: 1;
+        margin-bottom: 12px;
+    }
+
+    .note-card-v2-text {
+        color: #374151;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.875rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .note-card-v2-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 12px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .note-card-v2-meta {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .note-card-v2-meta .mud-icon-root {
+        font-size: 14px;
+    }
+
+    .note-card-v2-author {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    /* Empty state */
+    .notes-empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 20px;
+        text-align: center;
+        background: var(--mud-palette-background-grey);
+        border-radius: 16px;
+        border: 2px dashed var(--mud-palette-lines-default);
+    }
+
+    .empty-state-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: linear-gradient(145deg, #dbeafe, #bfdbfe);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3b82f6;
+    }
+
+    /* Edit mode */
+    .note-card-v2.editing {
+        box-shadow: 0 0 0 3px #3b82f6, 0 8px 24px rgba(59, 130, 246, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .note-edit-mode {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .note-edit-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: auto;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       F) QUICK ACTIONS SIDEBAR
+       ───────────────────────────────────────────────────────── */
+    .sidebar-sticky {
+        position: sticky;
+        top: 20px;
+    }
+
+    .section-actions {
+        border: 2px solid var(--mud-palette-lines-default);
+    }
+
+    .actions-content {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .action-btn {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-summary {
+        padding-top: 8px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+    }
+
+    .summary-label {
+        font-size: 0.875rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .summary-value {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--mud-palette-text-primary);
+    }
+
+    /* Notes grid container */
+    .notes-grid-container {
+        margin-top: 20px;
+    }
+
+    .notes-grid-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+</style>

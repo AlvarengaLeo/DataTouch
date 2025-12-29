@@ -1,0 +1,6 @@
+@DataTouch.Api_HostAddress = http://localhost:5142
+
+GET {{DataTouch.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

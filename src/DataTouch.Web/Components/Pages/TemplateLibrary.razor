@@ -1,0 +1,533 @@
+@page "/templates"
+@attribute [Authorize]
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Elegir Plantilla - DataTouch</PageTitle>
+
+<div class="templates-module @(_navDirection)" @onkeydown="HandleKeyDown" tabindex="0">
+    <header class="module-header">
+        <h1 class="header-title">Elige el diseño de tu tarjeta</h1>
+        <p class="header-subtitle">Selecciona ahora. Personaliza los detalles después.</p>
+    </header>
+
+    <section class="carousel-section">
+        <button class="nav-arrow nav-arrow--left" @onclick="NavigatePrev" aria-label="Plantilla anterior">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15,18 9,12 15,6"></polyline>
+            </svg>
+        </button>
+
+        <div class="carousel-container">
+            <div class="carousel-track">
+                @foreach (var pos in _visiblePositions)
+                {
+                    var template = GetTemplateAt(pos);
+                    var isActive = pos == 0;
+                    <div class="carousel-item @GetStateClass(pos)" style="@GetItemStyle(pos)" @onclick="() => HandleCardClick(pos)">
+                        <div class="page-wrapper">
+                            <div class="iphone-frame">
+                                <div class="dynamic-island"></div>
+                                <div class="iphone-screen" @onwheel:stopPropagation="true" @onwheel="e => HandlePhoneScroll(e)">
+                                    <div class="screen-content">
+                                        <div class="preview-hero" style="background: @template.HeroGradient;">
+                                            <div class="preview-avatar"><span>S</span></div>
+                                            <h3 class="preview-name">Sarah Johnson</h3>
+                                            <p class="preview-title">Marketing Director</p>
+                                            <p class="preview-company">Nurtured • Devoted</p>
+                                        </div>
+                                        <div class="preview-actions">
+                                            <button class="action-btn">📞</button>
+                                            <button class="action-btn">📹</button>
+                                            <button class="action-btn">💬</button>
+                                            <button class="action-btn">✉️</button>
+                                        </div>
+                                        <div class="preview-section">
+                                            <h4 class="section-title">Acerca de</h4>
+                                            <p class="section-text">Profesional de marketing con más de 10 años en estrategia digital y desarrollo de marca.</p>
+                                        </div>
+                                        <div class="preview-section">
+                                            <h4 class="section-title">Contacto</h4>
+                                            <div class="contact-item">📧 sarah.johnson@example.com</div>
+                                            <div class="contact-item">📱 +1 (555) 123-4567</div>
+                                        </div>
+                                        <div class="preview-section">
+                                            <h4 class="section-title">Enlaces</h4>
+                                            <div class="link-btn">🔗 Perfil de LinkedIn</div>
+                                            <div class="link-btn">🌐 Sitio Web Personal</div>
+                                        </div>
+                                    </div>
+                                    @if (isActive && !_hasScrolled)
+                                    {
+                                        <div class="scroll-hint"><span>Desliza para explorar</span></div>
+                                    }
+                                </div>
+                                <div class="home-indicator"></div>
+                            </div>
+                            <div class="page-shadow"></div>
+                        </div>
+                        <div class="item-label">
+                            <span class="item-name">@template.Name</span>
+                            @if (isActive) { <span class="selected-badge">✓ Seleccionado</span> }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <button class="nav-arrow nav-arrow--right" @onclick="NavigateNext" aria-label="Siguiente plantilla">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9,18 15,12 9,6"></polyline>
+            </svg>
+        </button>
+    </section>
+
+    <footer class="decision-dock">
+        <div class="dock-content">
+            <div class="dock-info">
+                <span class="dock-name">@SelectedTemplate?.Name</span>
+                <span class="dock-desc">@SelectedTemplate?.Description</span>
+            </div>
+            <div class="dock-dots">
+                @for (int i = 0; i < _templates.Count; i++)
+                {
+                    var idx = i;
+                    <button class="dot @(idx == _activeIndex ? "dot--active" : "")" @onclick="() => GoToIndex(idx)"></button>
+                }
+            </div>
+            <button class="cta-primary" @onclick="UseThisDesign">
+                <span>Usar este diseño</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </div>
+    </footer>
+</div>
+
+<style>
+    /* ══════════════════════════════════════════════════════════════════════
+       3D BOOK PAGE TURN - PREMIUM ANIMATION SYSTEM
+       ══════════════════════════════════════════════════════════════════════ */
+    .templates-module {
+        /* Phone dimensions */
+        --phone-width: clamp(260px, 22vw, 320px);
+        --phone-height: clamp(540px, 65vh, 680px);
+        --phone-radius: 52px;
+        
+        /* 3D Perspective */
+        --perspective: 1600px;
+        
+        /* Page Turn Animation - REFINED */
+        --page-turn-duration: 850ms;
+        --page-turn-easing: cubic-bezier(0.16, 1, 0.3, 1); /* Heavy ease-out, organic deceleration */
+        
+        /* Spacing - Increased for openness */
+        --spacing-adjacent: 1.1;
+        --spacing-far: 1.65;
+        
+        /* Z-Depth - Enhanced separation */
+        --z-active: 80px;
+        --z-adjacent: -60px;
+        --z-far: -140px;
+        
+        min-height: 100vh;
+        padding: 80px 32px 24px;
+        background: linear-gradient(165deg, #0a0d12 0%, #111720 50%, #0c1015 100%);
+        display: flex;
+        flex-direction: column;
+        outline: none;
+        overflow: hidden;
+    }
+
+    .module-header { text-align: left; margin-bottom: 20px; padding-left: 48px; }
+    .header-title { font-size: 1.75rem; font-weight: 600; color: #f3f4f6; margin: 0 0 4px 0; }
+    .header-subtitle { font-size: 0.925rem; color: #9ca3af; margin: 0; }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       CAROUSEL - 3D PERSPECTIVE STAGE
+       ══════════════════════════════════════════════════════════════════════ */
+    .carousel-section {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        min-height: 500px;
+        padding: 0 80px;
+        perspective: var(--perspective);
+        perspective-origin: center center;
+    }
+
+    .carousel-container {
+        width: 100%;
+        max-width: 1400px;
+        display: flex;
+        justify-content: center;
+        transform-style: preserve-3d;
+    }
+
+    .carousel-track {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        height: calc(var(--phone-height) + 100px);
+        width: 100%;
+        transform-style: preserve-3d;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       CAROUSEL ITEMS - BOOK PAGE BEHAVIOR
+       ══════════════════════════════════════════════════════════════════════ */
+    .carousel-item {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transform-style: preserve-3d;
+        transition: 
+            transform var(--page-turn-duration) var(--page-turn-easing),
+            opacity var(--page-turn-duration) var(--page-turn-easing),
+            filter var(--page-turn-duration) var(--page-turn-easing);
+        will-change: transform, opacity, filter;
+        cursor: pointer;
+    }
+
+    .page-wrapper {
+        position: relative;
+        transform-style: preserve-3d;
+    }
+
+    /* Dynamic page shadow during turn */
+    .page-shadow {
+        position: absolute;
+        top: 5%;
+        left: -20px;
+        right: -20px;
+        bottom: 5%;
+        background: transparent;
+        border-radius: var(--phone-radius);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity var(--page-turn-duration) var(--page-turn-easing);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       ACTIVE STATE - CENTER HERO (ALWAYS SHARP)
+       ══════════════════════════════════════════════════════════════════════ */
+    .carousel-item--active {
+        z-index: 50;
+        transform: translateX(0) translateZ(var(--z-active)) rotateY(0deg) scale(1.02);
+        opacity: 1;
+        /* NO blur, NO filter distortion - crystal clear text */
+        filter: none;
+        backface-visibility: hidden;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* GPU rasterization for sharpness */
+    .carousel-item--active .iphone-frame {
+        transform: translateZ(0);
+        box-shadow: 
+            0 4px 12px rgba(0,0,0,0.08),
+            0 12px 40px rgba(0,0,0,0.12),
+            0 32px 80px rgba(0,0,0,0.18),
+            0 0 100px rgba(99, 102, 241, 0.1);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       LEFT PAGES - Turned/Stacked Behind (like read pages)
+       ══════════════════════════════════════════════════════════════════════ */
+    .carousel-item--adjacent-left {
+        z-index: 30;
+        transform-origin: right center;
+        transform: 
+            translateX(calc(-1 * var(--spacing-adjacent) * var(--phone-width))) 
+            translateZ(var(--z-adjacent)) 
+            rotateY(42deg) 
+            scale(0.82);
+        opacity: 0.50;
+        filter: blur(0.8px) brightness(0.78);
+    }
+
+    .carousel-item--adjacent-left .page-shadow {
+        opacity: 0.35;
+        background: linear-gradient(to right, rgba(0,0,0,0.25), transparent);
+    }
+
+    .carousel-item--far-left {
+        z-index: 15;
+        transform-origin: right center;
+        transform: 
+            translateX(calc(-1 * var(--spacing-far) * var(--phone-width))) 
+            translateZ(var(--z-far)) 
+            rotateY(55deg) 
+            scale(0.65);
+        opacity: 0.20;
+        filter: blur(1.5px) brightness(0.6);
+        pointer-events: none;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       RIGHT PAGES - Waiting to be turned (unread stack)
+       ══════════════════════════════════════════════════════════════════════ */
+    .carousel-item--adjacent-right {
+        z-index: 30;
+        transform-origin: left center;
+        transform: 
+            translateX(calc(var(--spacing-adjacent) * var(--phone-width))) 
+            translateZ(var(--z-adjacent)) 
+            rotateY(-42deg) 
+            scale(0.82);
+        opacity: 0.50;
+        filter: blur(0.8px) brightness(0.78);
+    }
+
+    .carousel-item--adjacent-right .page-shadow {
+        opacity: 0.35;
+        background: linear-gradient(to left, rgba(0,0,0,0.25), transparent);
+    }
+
+    .carousel-item--far-right {
+        z-index: 15;
+        transform-origin: left center;
+        transform: 
+            translateX(calc(var(--spacing-far) * var(--phone-width))) 
+            translateZ(var(--z-far)) 
+            rotateY(-55deg) 
+            scale(0.65);
+        opacity: 0.20;
+        filter: blur(1.5px) brightness(0.6);
+        pointer-events: none;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       DIRECTION-BASED PAGE TURN ANIMATION
+       ══════════════════════════════════════════════════════════════════════ */
+    .nav-next .carousel-item--active {
+        animation: pageEnterFromRight var(--page-turn-duration) var(--page-turn-easing);
+    }
+
+    .nav-prev .carousel-item--active {
+        animation: pageEnterFromLeft var(--page-turn-duration) var(--page-turn-easing);
+    }
+
+    @@keyframes pageEnterFromRight {
+        0% {
+            transform: 
+                translateX(calc(var(--spacing-adjacent) * var(--phone-width))) 
+                translateZ(var(--z-adjacent)) 
+                rotateY(-42deg) 
+                scale(0.82);
+            opacity: 0.50;
+            filter: blur(0.8px) brightness(0.78);
+        }
+        40% {
+            transform: 
+                translateX(calc(0.25 * var(--phone-width))) 
+                translateZ(40px) 
+                rotateY(-12deg) 
+                scale(0.96);
+            opacity: 0.85;
+            filter: blur(0.2px) brightness(0.95);
+        }
+        100% {
+            transform: translateX(0) translateZ(var(--z-active)) rotateY(0deg) scale(1.02);
+            opacity: 1;
+            filter: none;
+        }
+    }
+
+    @@keyframes pageEnterFromLeft {
+        0% {
+            transform: 
+                translateX(calc(-1 * var(--spacing-adjacent) * var(--phone-width))) 
+                translateZ(var(--z-adjacent)) 
+                rotateY(42deg) 
+                scale(0.82);
+            opacity: 0.50;
+            filter: blur(0.8px) brightness(0.78);
+        }
+        40% {
+            transform: 
+                translateX(calc(-0.25 * var(--phone-width))) 
+                translateZ(40px) 
+                rotateY(12deg) 
+                scale(0.96);
+            opacity: 0.85;
+            filter: blur(0.2px) brightness(0.95);
+        }
+        100% {
+            transform: translateX(0) translateZ(var(--z-active)) rotateY(0deg) scale(1.02);
+            opacity: 1;
+            filter: none;
+        }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       iPHONE FRAME (unchanged)
+       ══════════════════════════════════════════════════════════════════════ */
+    .iphone-frame {
+        width: var(--phone-width);
+        height: var(--phone-height);
+        background: linear-gradient(145deg, #2a2f3a, #1a1f28);
+        border-radius: var(--phone-radius);
+        padding: 10px;
+        position: relative;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 30px 60px -15px rgba(0,0,0,0.5);
+    }
+
+    .dynamic-island {
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 28px;
+        background: #0a0c10;
+        border-radius: 20px;
+        z-index: 20;
+    }
+
+    .iphone-screen {
+        flex: 1;
+        height: calc(100% - 10px);
+        background: #0f1218;
+        border-radius: calc(var(--phone-radius) - 10px);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .screen-content {
+        height: 100%;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .screen-content::-webkit-scrollbar { display: none; }
+
+    .home-indicator {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 36%;
+        height: 4px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 2px;
+    }
+
+    /* Preview content styles */
+    .preview-hero { padding: 52px 20px 24px; text-align: center; }
+    .preview-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 1.5rem; margin: 0 auto 12px; }
+    .preview-name { font-size: 1.1rem; font-weight: 600; color: #f9fafb; margin: 0 0 4px 0; }
+    .preview-title { font-size: 0.8rem; color: #d1d5db; margin: 0; }
+    .preview-company { font-size: 0.7rem; color: #9ca3af; margin: 0; }
+    .preview-actions { display: flex; justify-content: center; gap: 14px; padding: 16px 20px; }
+    .action-btn { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; }
+    .preview-section { padding: 18px 20px; border-top: 1px solid rgba(255,255,255,0.06); }
+    .section-title { font-size: 0.75rem; font-weight: 600; color: #9ca3af; margin: 0 0 10px 0; text-transform: uppercase; }
+    .section-text { font-size: 0.8rem; color: #e5e7eb; margin: 0; line-height: 1.6; }
+    .contact-item { font-size: 0.75rem; color: #d1d5db; padding: 8px 0; }
+    .link-btn { font-size: 0.75rem; color: #a5b4fc; padding: 12px 16px; background: rgba(99,102,241,0.1); border-radius: 12px; margin-bottom: 8px; }
+    .scroll-hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 0.6rem; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 10px; }
+
+    /* Labels */
+    .item-label { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 16px; }
+    .item-name { font-size: 1rem; font-weight: 600; color: #f3f4f6; }
+    .carousel-item:not(.carousel-item--active) .item-name { color: #9ca3af; }
+    .selected-badge { font-size: 0.7rem; color: #a5b4fc; background: rgba(99,102,241,0.15); padding: 5px 12px; border-radius: 14px; }
+
+    /* Navigation arrows */
+    .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 180ms; z-index: 60; }
+    .nav-arrow:hover { background: rgba(255,255,255,0.08); color: #f3f4f6; }
+    .nav-arrow--left { left: 16px; }
+    .nav-arrow--right { right: 16px; }
+
+    /* Decision dock */
+    .decision-dock { padding: 16px 32px 20px; }
+    .dock-content { display: flex; align-items: center; justify-content: center; gap: 36px; padding: 16px 28px; background: rgba(18,24,32,0.9); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; backdrop-filter: blur(16px); max-width: 720px; margin: 0 auto; }
+    .dock-info { display: flex; flex-direction: column; min-width: 160px; }
+    .dock-name { font-size: 1.1rem; font-weight: 600; color: #f3f4f6; }
+    .dock-desc { font-size: 0.825rem; color: #9ca3af; }
+    .dock-dots { display: flex; gap: 10px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; border: none; background: rgba(255,255,255,0.12); cursor: pointer; padding: 0; transition: all 220ms; }
+    .dot--active { background: #6366f1; width: 28px; border-radius: 6px; }
+    .cta-primary { display: flex; align-items: center; gap: 8px; padding: 13px 26px; border-radius: 26px; border: none; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 200ms; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.35); }
+
+    /* Reduced motion */
+    @@media (prefers-reduced-motion: reduce) {
+        .carousel-item { transition: opacity 200ms ease, transform 200ms ease; }
+        .nav-next .carousel-item--active, .nav-prev .carousel-item--active { animation: none; }
+    }
+
+    /* Responsive */
+    @@media (max-width: 900px) {
+        .templates-module { padding: 70px 16px 20px; --phone-width: clamp(200px, 50vw, 260px); --phone-height: clamp(420px, 55vh, 520px); }
+        .carousel-section { padding: 0 48px; }
+        .dock-content { gap: 20px; padding: 14px 20px; flex-wrap: wrap; }
+    }
+</style>
+
+@code {
+    private class TemplateData
+    {
+        public Guid Id { get; init; } = Guid.NewGuid();
+        public required string Name { get; init; }
+        public required string Description { get; init; }
+        public required string HeroGradient { get; init; }
+    }
+
+    private int _activeIndex = 2;
+    private bool _hasScrolled = false;
+    private string _navDirection = "";
+    private DateTime _lastNavTime = DateTime.MinValue;
+    private readonly int[] _visiblePositions = { -2, -1, 0, 1, 2 };
+
+    private readonly List<TemplateData> _templates = new()
+    {
+        new() { Name = "Creative", Description = "Stand out with modern designs.", HeroGradient = "linear-gradient(135deg, #ec4899, #f97316)" },
+        new() { Name = "Minimal", Description = "Clean and distraction-free.", HeroGradient = "linear-gradient(135deg, #6b7280, #4b5563)" },
+        new() { Name = "Professional", Description = "Best for sales and enterprise.", HeroGradient = "linear-gradient(135deg, #6366f1, #8b5cf6)" },
+        new() { Name = "Corporate", Description = "Strong branding presence.", HeroGradient = "linear-gradient(135deg, #0ea5e9, #3b82f6)" },
+        new() { Name = "Bold", Description = "Make a powerful statement.", HeroGradient = "linear-gradient(135deg, #f43f5e, #e11d48)" }
+    };
+
+    private TemplateData? SelectedTemplate => _templates.Count > 0 ? _templates[_activeIndex] : null;
+
+    private int WrapIndex(int index) { var c = _templates.Count; return ((index % c) + c) % c; }
+    private TemplateData GetTemplateAt(int pos) => _templates[WrapIndex(_activeIndex + pos)];
+    private string GetStateClass(int pos) => pos switch { 0 => "carousel-item--active", -1 => "carousel-item--adjacent-left", 1 => "carousel-item--adjacent-right", -2 => "carousel-item--far-left", 2 => "carousel-item--far-right", _ => "" };
+    private string GetItemStyle(int pos) => $"z-index: {pos switch { 0 => 50, -1 or 1 => 30, _ => 15 }};";
+
+    private async Task NavigateNext()
+    {
+        if (IsThrottled()) return;
+        _navDirection = "nav-next";
+        _activeIndex = WrapIndex(_activeIndex + 1);
+        StateHasChanged();
+        await Task.Delay(750);
+        _navDirection = "";
+    }
+
+    private async Task NavigatePrev()
+    {
+        if (IsThrottled()) return;
+        _navDirection = "nav-prev";
+        _activeIndex = WrapIndex(_activeIndex - 1);
+        StateHasChanged();
+        await Task.Delay(750);
+        _navDirection = "";
+    }
+
+    private void GoToIndex(int idx) { if (idx != _activeIndex) { _navDirection = idx > _activeIndex ? "nav-next" : "nav-prev"; _activeIndex = WrapIndex(idx); } }
+    private void HandleCardClick(int pos) { if (pos > 0) _ = NavigateNext(); else if (pos < 0) _ = NavigatePrev(); }
+    private bool IsThrottled() { var now = DateTime.Now; if ((now - _lastNavTime).TotalMilliseconds < 700) return true; _lastNavTime = now; return false; }
+    private async Task HandleKeyDown(KeyboardEventArgs e) { if (e.Key == "ArrowRight") await NavigateNext(); else if (e.Key == "ArrowLeft") await NavigatePrev(); else if (e.Key == "Enter" || e.Key == " ") UseThisDesign(); }
+    private void HandlePhoneScroll(WheelEventArgs e) { if (!_hasScrolled) { _hasScrolled = true; StateHasChanged(); } }
+    private void HandleWheel(WheelEventArgs e) { }
+    private void UseThisDesign() { if (SelectedTemplate != null) { Snackbar.Add($"✓ Design applied: {SelectedTemplate.Name}", Severity.Success); Navigation.NavigateTo("/cards/mine"); } }
+}

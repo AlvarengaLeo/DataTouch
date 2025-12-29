@@ -1,0 +1,88 @@
+@page "/templates/demo/coral-wave"
+@using DataTouch.Web.Components.Templates
+
+<PageTitle>Coral Wave Template - Demo</PageTitle>
+
+<CoralWaveTemplate 
+    Profile="@_profile"
+    Contact="@_contact"
+    AboutMe="@_aboutMe"
+    ContactCard="@_contactCard"
+    WebLinks="@_webLinks"
+    Schedule="@_schedule"
+    OnQrClick="HandleQrClick"
+    OnShareClick="HandleShareClick"
+    OnAddToContactClick="HandleAddToContact" />
+
+@code {
+    private CoralWaveTemplate.ProfileData _profile = new()
+    {
+        Name = "Sarah Johnson",
+        Title = "Sales Director",
+        Company = "Acme Corporation",
+        CoverImageUrl = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&h=600&fit=crop",
+        MonogramLetter = "S"
+    };
+
+    private CoralWaveTemplate.ContactData _contact = new()
+    {
+        Phone = "+1 234 567 8900",
+        Email = "sarah@acmecorp.com",
+        WhatsApp = "+1 234 567 8900",
+        Address = new CoralWaveTemplate.AddressData
+        {
+            Street = "123 Business Avenue",
+            City = "New York",
+            State = "NY",
+            ZipCode = "10001",
+            Country = "United States"
+        },
+        MapUrl = "https://maps.google.com/?q=New+York"
+    };
+
+    private CoralWaveTemplate.AboutMeData _aboutMe = new()
+    {
+        Enabled = true,
+        Description = "Passionate sales leader with over 10 years of experience driving revenue growth and building high-performing teams. Specialized in B2B enterprise solutions and strategic partnerships."
+    };
+
+    private CoralWaveTemplate.ContactCardData _contactCard = new()
+    {
+        Enabled = true
+    };
+
+    private CoralWaveTemplate.WebLinksData _webLinks = new()
+    {
+        Enabled = true,
+        Description = "Learn more about us",
+        Links = new List<CoralWaveTemplate.WebLinkItem>
+        {
+            new() { Title = "Company Website", Subtitle = "Visit our main site", Url = "https://example.com" },
+            new() { Title = "LinkedIn Profile", Subtitle = "Connect with me", Url = "https://linkedin.com" },
+            new() { Title = "Portfolio", Subtitle = "View my work", Url = "https://portfolio.example.com" }
+        }
+    };
+
+    private CoralWaveTemplate.ScheduleData _schedule = new()
+    {
+        Enabled = true,
+        Description = "Schedule a meeting to discuss potential opportunities for collaboration",
+        CalendlyUrl = "https://calendly.com/example",
+        AddToCalendarUrl = "https://calendar.google.com"
+    };
+
+    private void HandleQrClick()
+    {
+        // Show QR modal
+    }
+
+    private void HandleShareClick()
+    {
+        // Share card
+    }
+
+    private void HandleAddToContact()
+    {
+        // Generate vCard
+    }
+}

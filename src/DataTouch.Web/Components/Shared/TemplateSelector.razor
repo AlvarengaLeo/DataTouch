@@ -1,0 +1,654 @@
+@using DataTouch.Domain.Entities
+@using DataTouch.Infrastructure.Data
+@using Microsoft.EntityFrameworkCore
+
+<div class="template-selector-qrchimp">
+    <div class="selector-header">
+        <h3 class="selector-title">
+            <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Small" Class="mr-2" />
+            Page Template
+        </h3>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="loading-shimmer">
+            <div class="shimmer-item"></div>
+            <div class="shimmer-item"></div>
+            <div class="shimmer-item"></div>
+            <div class="shimmer-item"></div>
+        </div>
+    }
+    else
+    {
+        <div class="template-carousel-container">
+            @* Previous Button *@
+            <button class="carousel-nav prev @(_canGoPrevious ? "" : "disabled")" 
+                    @onclick="GoToPrevious" 
+                    disabled="@(!_canGoPrevious)">
+                <MudIcon Icon="@Icons.Material.Filled.ChevronLeft" />
+            </button>
+
+            @* Templates Carousel *@
+            <div class="template-carousel" @ref="_carouselRef">
+                <div class="carousel-track" style="transform: translateX(-@(_currentIndex * _itemWidth)px)">
+                    @foreach (var template in _templates)
+                    {
+                        <div class="template-item @(SelectedTemplateId == template.Id ? "selected" : "")"
+                             @onclick="() => SelectTemplate(template)">
+                            
+                            @* Template Preview Card *@
+                            @if (IsCoverPhotoTemplate(template))
+                            {
+                                @* Cover Photo Style Preview *@
+                                <div class="template-preview-card cover-style" style="@GetCoverPhotoStyle(template)">
+                                    <div class="cover-overlay" style="@GetOverlayStyle(template)"></div>
+                                    <div class="cover-content">
+                                        <div class="preview-avatar cover" style="@GetAvatarGradient(template)"></div>
+                                        <div class="preview-text name light"></div>
+                                        <div class="preview-text title light"></div>
+                                        <div class="preview-icons-row">
+                                            <span class="preview-icon" style="@GetIconStyle(template)"></span>
+                                            <span class="preview-icon" style="@GetIconStyle(template)"></span>
+                                            <span class="preview-icon" style="@GetIconStyle(template)"></span>
+                                        </div>
+                                    </div>
+                                    <div class="cover-footer">
+                                        <div class="preview-text about"></div>
+                                        <div class="preview-text about short"></div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                @* Standard Style Preview *@
+                                <div class="template-preview-card" style="@GetTemplateBackgroundStyle(template)">
+                                    <div class="preview-phone-frame">
+                                        <div class="preview-content">
+                                            <div class="preview-avatar" style="@GetAvatarGradient(template)"></div>
+                                            <div class="preview-text name"></div>
+                                            <div class="preview-text title"></div>
+                                            <div class="preview-cta-row">
+                                                <span class="preview-cta-btn" style="@GetPrimaryBtnStyle(template)"></span>
+                                                <span class="preview-cta-btn small" style="@GetSecondaryBtnStyle(template)"></span>
+                                                <span class="preview-cta-btn small" style="@GetSecondaryBtnStyle(template)"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            
+                            @* Selection Checkmark *@
+                            @if (SelectedTemplateId == template.Id)
+                            {
+                                <div class="selection-checkmark">
+                                    <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                                </div>
+                            }
+                            
+                            @* Template Name *@
+                            <div class="template-name">@template.Name</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @* Next Button *@
+            <button class="carousel-nav next @(_canGoNext ? "" : "disabled")" 
+                    @onclick="GoToNext" 
+                    disabled="@(!_canGoNext)">
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" />
+            </button>
+        </div>
+
+        @* Carousel Indicators *@
+        <div class="carousel-indicators">
+            @for (int i = 0; i < _totalPages; i++)
+            {
+                var index = i;
+                <span class="indicator @(_currentPage == index ? "active" : "")" 
+                      @onclick="() => GoToPage(index)"></span>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .template-selector-qrchimp {
+        padding: 16px;
+        background: var(--mud-palette-surface);
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .selector-header {
+        margin-bottom: 16px;
+    }
+    
+    .selector-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--mud-palette-text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    /* Loading Shimmer */
+    .loading-shimmer {
+        display: flex;
+        gap: 12px;
+        padding: 8px 0;
+    }
+    
+    .shimmer-item {
+        width: 100px;
+        height: 160px;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 12px;
+    }
+    
+    @@keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    
+    /* Carousel Container */
+    .template-carousel-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+    }
+    
+    /* Navigation Buttons */
+    .carousel-nav {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--mud-palette-lines-default);
+        background: var(--mud-palette-surface);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+        color: var(--mud-palette-text-primary);
+    }
+    
+    .carousel-nav:hover:not(.disabled) {
+        background: var(--mud-palette-primary);
+        color: white;
+        border-color: var(--mud-palette-primary);
+    }
+    
+    .carousel-nav.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+    
+    /* Carousel Track */
+    .template-carousel {
+        flex: 1;
+        overflow: hidden;
+        padding: 8px 0;
+    }
+    
+    .carousel-track {
+        display: flex;
+        gap: 12px;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Template Item */
+    .template-item {
+        flex-shrink: 0;
+        width: 110px;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+    
+    .template-item:hover {
+        transform: translateY(-4px);
+    }
+    
+    .template-item:hover .template-preview-card {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    
+    .template-item.selected .template-preview-card {
+        border: 2px solid var(--mud-palette-primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    
+    /* Template Preview Card */
+    .template-preview-card {
+        width: 100%;
+        height: 160px;
+        border-radius: 12px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+    
+    .preview-phone-frame {
+        width: 80%;
+        height: 85%;
+        background: white;
+        border-radius: 10px;
+        padding: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .preview-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        height: 100%;
+        justify-content: center;
+    }
+    
+    .preview-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+    }
+    
+    .preview-text {
+        border-radius: 3px;
+    }
+    
+    .preview-text.name {
+        width: 60%;
+        height: 6px;
+        background: #374151;
+    }
+    
+    .preview-text.title {
+        width: 45%;
+        height: 4px;
+        background: #9CA3AF;
+    }
+    
+    .preview-cta-row {
+        display: flex;
+        gap: 4px;
+        margin-top: 6px;
+    }
+    
+    .preview-cta-btn {
+        height: 16px;
+        border-radius: 4px;
+        display: block;
+    }
+    
+    .preview-cta-btn:not(.small) {
+        width: 50px;
+    }
+    
+    .preview-cta-btn.small {
+        width: 16px;
+    }
+    
+    /* Selection Checkmark */
+    .selection-checkmark {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 22px;
+        height: 22px;
+        background: var(--mud-palette-primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 2px 4px rgba(99, 102, 241, 0.4);
+        animation: pop-in 0.2s ease-out;
+    }
+    
+    @@keyframes pop-in {
+        0% { transform: scale(0); }
+        70% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    
+    /* Template Name */
+    .template-name {
+        text-align: center;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--mud-palette-text-primary);
+        margin-top: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Carousel Indicators */
+    .carousel-indicators {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 12px;
+    }
+    
+    .indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--mud-palette-lines-default);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .indicator:hover {
+        background: var(--mud-palette-text-secondary);
+    }
+    
+    .indicator.active {
+        background: var(--mud-palette-primary);
+        width: 20px;
+        border-radius: 4px;
+    }
+    
+    /* Cover Photo Style */
+    .template-preview-card.cover-style {
+        position: relative;
+        overflow: hidden;
+        background-size: cover;
+        background-position: center;
+        padding: 0;
+    }
+    
+    .cover-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+    }
+    
+    .cover-content {
+        position: relative;
+        z-index: 2;
+        height: 60%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 8px;
+        gap: 4px;
+    }
+    
+    .preview-avatar.cover {
+        width: 32px;
+        height: 32px;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    .preview-text.light {
+        background: rgba(255,255,255,0.9);
+    }
+    
+    .preview-text.name.light {
+        width: 55%;
+        height: 6px;
+    }
+    
+    .preview-text.title.light {
+        width: 40%;
+        height: 4px;
+        background: rgba(255,255,255,0.7);
+    }
+    
+    .preview-icons-row {
+        display: flex;
+        gap: 6px;
+        margin-top: 4px;
+    }
+    
+    .preview-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.5);
+    }
+    
+    .cover-footer {
+        position: relative;
+        z-index: 2;
+        height: 40%;
+        background: white;
+        border-radius: 12px 12px 0 0;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .preview-text.about {
+        width: 80%;
+        height: 4px;
+        background: #E5E7EB;
+        border-radius: 2px;
+    }
+    
+    .preview-text.about.short {
+        width: 60%;
+    }
+</style>
+
+@code {
+    [Parameter] public Guid? SelectedTemplateId { get; set; }
+    [Parameter] public EventCallback<CardTemplate> OnTemplateSelected { get; set; }
+    [Inject] private DataTouchDbContext DbContext { get; set; } = default!;
+    
+    private ElementReference _carouselRef;
+    private List<CardTemplate> _templates = new();
+    private bool _isLoading = true;
+    
+    // Carousel state
+    private int _currentIndex = 0;
+    private const int _itemWidth = 122; // item width + gap
+    private const int _visibleItems = 4;
+    
+    private int _totalPages => Math.Max(1, (int)Math.Ceiling((_templates.Count - _visibleItems + 1) / 2.0));
+    private int _currentPage => _currentIndex / 2;
+    private bool _canGoPrevious => _currentIndex > 0;
+    private bool _canGoNext => _currentIndex < _templates.Count - _visibleItems;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _templates = await DbContext.CardTemplates
+            .Where(t => t.IsActive && t.IsSystemTemplate)
+            .OrderBy(t => t.Industry)
+            .ThenBy(t => t.Name)
+            .ToListAsync();
+        _isLoading = false;
+    }
+    
+    private async Task SelectTemplate(CardTemplate template)
+    {
+        SelectedTemplateId = template.Id;
+        await OnTemplateSelected.InvokeAsync(template);
+    }
+    
+    private void GoToPrevious()
+    {
+        if (_canGoPrevious)
+        {
+            _currentIndex = Math.Max(0, _currentIndex - 2);
+        }
+    }
+    
+    private void GoToNext()
+    {
+        if (_canGoNext)
+        {
+            _currentIndex = Math.Min(_templates.Count - _visibleItems, _currentIndex + 2);
+        }
+    }
+    
+    private void GoToPage(int page)
+    {
+        _currentIndex = Math.Min(page * 2, Math.Max(0, _templates.Count - _visibleItems));
+    }
+    
+    private string GetTemplateBackgroundStyle(CardTemplate template)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(template.DefaultStyleJson);
+            var root = doc.RootElement;
+            
+            if (root.TryGetProperty("BackgroundValue", out var bgValue))
+            {
+                return $"background: {bgValue.GetString()};";
+            }
+        }
+        catch { }
+        
+        return "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);";
+    }
+    
+    private string GetAvatarGradient(CardTemplate template)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(template.DefaultStyleJson);
+            var root = doc.RootElement;
+            
+            var primary = "#6366F1";
+            var secondary = "#EC4899";
+            
+            if (root.TryGetProperty("PrimaryColor", out var pc))
+                primary = pc.GetString() ?? primary;
+            if (root.TryGetProperty("SecondaryColor", out var sc))
+                secondary = sc.GetString() ?? secondary;
+            
+            return $"background: linear-gradient(135deg, {primary}, {secondary});";
+        }
+        catch { }
+        
+        return "background: linear-gradient(135deg, #6366F1, #EC4899);";
+    }
+    
+    private string GetPrimaryBtnStyle(CardTemplate template)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(template.DefaultStyleJson);
+            var root = doc.RootElement;
+            
+            if (root.TryGetProperty("PrimaryColor", out var pc))
+            {
+                return $"background: {pc.GetString()};";
+            }
+        }
+        catch { }
+        
+        return "background: #6366F1;";
+    }
+    
+    private string GetSecondaryBtnStyle(CardTemplate template)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(template.DefaultStyleJson);
+            var root = doc.RootElement;
+            
+            if (root.TryGetProperty("PrimaryColor", out var pc))
+            {
+                var color = pc.GetString() ?? "#6366F1";
+                return $"background: {color}40;";
+            }
+        }
+        catch { }
+        
+        return "background: #6366F140;";
+    }
+    
+    // Cover Photo Helper Methods
+    private bool IsCoverPhotoTemplate(CardTemplate template)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(template.DefaultStyleJson);
+            var root = doc.RootElement;
+            
+            if (root.TryGetProperty("LayoutType", out var lt))
+            {
+                return lt.GetString() == "cover-photo";
+            }
+        }
+        catch { }
+        
+        return false;
+    }
+    
+    private string GetCoverPhotoStyle(CardTemplate template)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(template.DefaultStyleJson);
+            var root = doc.RootElement;
+            
+            if (root.TryGetProperty("BackgroundValue", out var bg))
+            {
+                var bgValue = bg.GetString();
+                if (!string.IsNullOrEmpty(bgValue) && bgValue.StartsWith("http"))
+                {
+                    return $"background-image: url({bgValue});";
+                }
+            }
+        }
+        catch { }
+        
+        return "background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%);";
+    }
+    
+    private string GetOverlayStyle(CardTemplate template)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(template.DefaultStyleJson);
+            var root = doc.RootElement;
+            
+            if (root.TryGetProperty("OverlayGradient", out var og))
+            {
+                return $"background: {og.GetString()};";
+            }
+        }
+        catch { }
+        
+        return "background: linear-gradient(180deg, transparent 0%, rgba(15,23,42,0.9) 100%);";
+    }
+    
+    private string GetIconStyle(CardTemplate template)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(template.DefaultStyleJson);
+            var root = doc.RootElement;
+            
+            if (root.TryGetProperty("PrimaryColor", out var pc))
+            {
+                return $"background: {pc.GetString()}40; border-color: {pc.GetString()};";
+            }
+        }
+        catch { }
+        
+        return "background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.5);";
+    }
+}

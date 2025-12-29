@@ -1,0 +1,235 @@
+@using DataTouch.Domain.Entities
+
+<div class="design-customizer">
+    <MudText Typo="Typo.h6" Class="mb-4">Personaliza el diseño</MudText>
+    
+    <MudExpansionPanels MultiExpansion="true">
+        @* ═══════════════════════════════════════════════════════════════
+           COLORES
+           ═══════════════════════════════════════════════════════════════ *@
+        <MudExpansionPanel Text="Colores" InitiallyExpanded="true">
+            <MudGrid Spacing="2">
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Class="mb-1">Color primario</MudText>
+                    <div class="color-picker-wrapper">
+                        <input type="color" @bind="Style.PrimaryColor" class="color-input" />
+                        <MudTextField @bind-Value="Style.PrimaryColor" Variant="Variant.Outlined" 
+                                      Margin="Margin.Dense" Class="color-text" />
+                    </div>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Class="mb-1">Color secundario</MudText>
+                    <div class="color-picker-wrapper">
+                        <input type="color" @bind="Style.SecondaryColor" class="color-input" />
+                        <MudTextField @bind-Value="Style.SecondaryColor" Variant="Variant.Outlined" 
+                                      Margin="Margin.Dense" Class="color-text" />
+                    </div>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Class="mb-1">Color de texto</MudText>
+                    <div class="color-picker-wrapper">
+                        <input type="color" @bind="Style.TextColor" class="color-input" />
+                        <MudTextField @bind-Value="Style.TextColor" Variant="Variant.Outlined" 
+                                      Margin="Margin.Dense" Class="color-text" />
+                    </div>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Class="mb-1">Fondo de tarjeta</MudText>
+                    <div class="color-picker-wrapper">
+                        <input type="color" @bind="Style.BackgroundColor" class="color-input" />
+                        <MudTextField @bind-Value="Style.BackgroundColor" Variant="Variant.Outlined" 
+                                      Margin="Margin.Dense" Class="color-text" />
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </MudExpansionPanel>
+        
+        @* ═══════════════════════════════════════════════════════════════
+           FONDO DE PÁGINA
+           ═══════════════════════════════════════════════════════════════ *@
+        <MudExpansionPanel Text="Fondo de página">
+            <MudSelect T="string" @bind-Value="Style.BackgroundType" Label="Tipo de fondo" 
+                       Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                <MudSelectItem Value="@("solid")">Color sólido</MudSelectItem>
+                <MudSelectItem Value="@("gradient")">Degradado</MudSelectItem>
+                <MudSelectItem Value="@("image")">Imagen</MudSelectItem>
+            </MudSelect>
+            
+            @if (Style.BackgroundType == "solid")
+            {
+                <div class="color-picker-wrapper">
+                    <input type="color" @bind="_solidBgColor" class="color-input" />
+                    <MudTextField Value="@_solidBgColor" ValueChanged="@((string v) => UpdateSolidBackground(v))" 
+                                  Variant="Variant.Outlined" Margin="Margin.Dense" Class="color-text" />
+                </div>
+            }
+            else if (Style.BackgroundType == "gradient")
+            {
+                <MudText Typo="Typo.caption" Class="mb-2">Selecciona un degradado</MudText>
+                <div class="gradient-presets">
+                    @foreach (var gradient in _gradientPresets)
+                    {
+                        <div class="gradient-preset @(Style.BackgroundValue == gradient.Value ? "selected" : "")"
+                             style="background: @gradient.Value;"
+                             @onclick="() => SelectGradient(gradient.Value)"
+                             title="@gradient.Name">
+                        </div>
+                    }
+                </div>
+            }
+            else if (Style.BackgroundType == "image")
+            {
+                <MudTextField @bind-Value="Style.BackgroundValue" Label="URL de la imagen" 
+                              Variant="Variant.Outlined" Margin="Margin.Dense" 
+                              HelperText="Ingresa la URL de una imagen de fondo" />
+            }
+        </MudExpansionPanel>
+        
+        @* ═══════════════════════════════════════════════════════════════
+           TIPOGRAFÍA
+           ═══════════════════════════════════════════════════════════════ *@
+        <MudExpansionPanel Text="Tipografía">
+            <MudSelect T="string" @bind-Value="Style.FontFamily" Label="Fuente" 
+                       Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                <MudSelectItem Value="@("Inter")">Inter</MudSelectItem>
+                <MudSelectItem Value="@("Roboto")">Roboto</MudSelectItem>
+                <MudSelectItem Value="@("Outfit")">Outfit</MudSelectItem>
+                <MudSelectItem Value="@("Nunito")">Nunito</MudSelectItem>
+                <MudSelectItem Value="@("Playfair Display")">Playfair Display</MudSelectItem>
+                <MudSelectItem Value="@("JetBrains Mono")">JetBrains Mono</MudSelectItem>
+            </MudSelect>
+            
+            <MudSelect T="string" @bind-Value="Style.HeadingSize" Label="Tamaño de títulos" 
+                       Variant="Variant.Outlined" Dense="true">
+                <MudSelectItem Value="@("1.25rem")">Pequeño</MudSelectItem>
+                <MudSelectItem Value="@("1.5rem")">Normal</MudSelectItem>
+                <MudSelectItem Value="@("1.75rem")">Grande</MudSelectItem>
+                <MudSelectItem Value="@("2rem")">Extra grande</MudSelectItem>
+            </MudSelect>
+        </MudExpansionPanel>
+        
+        @* ═══════════════════════════════════════════════════════════════
+           ESTILO DE TARJETA
+           ═══════════════════════════════════════════════════════════════ *@
+        <MudExpansionPanel Text="Estilo de tarjeta">
+            <MudText Typo="Typo.caption" Class="mb-2">Bordes redondeados</MudText>
+            <MudSlider T="int" @bind-Value="_borderRadiusValue" Min="0" Max="32" Step="4" 
+                       ValueLabel="true" Class="mb-4">
+                Redondez: @_borderRadiusValue px
+            </MudSlider>
+            
+            <MudSelect T="string" @bind-Value="Style.CardShadow" Label="Sombra" 
+                       Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                <MudSelectItem Value="@("none")">Sin sombra</MudSelectItem>
+                <MudSelectItem Value="@("0 2px 8px rgba(0,0,0,0.08)")">Suave</MudSelectItem>
+                <MudSelectItem Value="@("0 4px 20px rgba(0,0,0,0.1)")">Normal</MudSelectItem>
+                <MudSelectItem Value="@("0 8px 32px rgba(0,0,0,0.15)")">Pronunciada</MudSelectItem>
+            </MudSelect>
+            
+            <MudSelect T="string" @bind-Value="Style.LoadingAnimation" Label="Animación de carga" 
+                       Variant="Variant.Outlined" Dense="true">
+                <MudSelectItem Value="@("none")">Sin animación</MudSelectItem>
+                <MudSelectItem Value="@("fade")">Fade in</MudSelectItem>
+                <MudSelectItem Value="@("slide")">Slide up</MudSelectItem>
+            </MudSelect>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+</div>
+
+<style>
+    .design-customizer {
+        padding: 16px;
+    }
+    
+    .color-picker-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .color-input {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        padding: 0;
+    }
+    
+    .color-text {
+        flex: 1;
+    }
+    
+    .gradient-presets {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+    
+    .gradient-preset {
+        height: 48px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s ease;
+    }
+    
+    .gradient-preset:hover {
+        transform: scale(1.05);
+    }
+    
+    .gradient-preset.selected {
+        border-color: var(--mud-palette-primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+    }
+</style>
+
+@code {
+    [Parameter] public CardStyle Style { get; set; } = new();
+    [Parameter] public EventCallback<CardStyle> StyleChanged { get; set; }
+    
+    private string _solidBgColor = "#667eea";
+    private int _borderRadiusValue = 16;
+    
+    private readonly List<(string Name, string Value)> _gradientPresets = new()
+    {
+        ("Púrpura Violeta", "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"),
+        ("Rosa Melocotón", "linear-gradient(135deg, #ff9a9e 0%, #fad0c4 50%, #ffecd2 100%)"),
+        ("Verde Menta", "linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)"),
+        ("Azul Océano", "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"),
+        ("Noche Oscura", "linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)"),
+        ("Naranja Solar", "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"),
+        ("Cielo Azul", "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"),
+        ("Atardecer", "linear-gradient(135deg, #fa709a 0%, #fee140 100%)")
+    };
+    
+    protected override void OnParametersSet()
+    {
+        if (Style != null)
+        {
+            if (int.TryParse(Style.CardBorderRadius.Replace("px", ""), out var radius))
+            {
+                _borderRadiusValue = radius;
+            }
+        }
+    }
+    
+    private void UpdateSolidBackground(string color)
+    {
+        _solidBgColor = color;
+        Style.BackgroundValue = color;
+        NotifyStyleChanged();
+    }
+    
+    private void SelectGradient(string gradient)
+    {
+        Style.BackgroundValue = gradient;
+        NotifyStyleChanged();
+    }
+    
+    private async void NotifyStyleChanged()
+    {
+        Style.CardBorderRadius = $"{_borderRadiusValue}px";
+        await StyleChanged.InvokeAsync(Style);
+    }
+}

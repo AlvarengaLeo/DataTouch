@@ -1,0 +1,880 @@
+@* ═══════════════════════════════════════════════════════════════════════════════
+    CORAL WAVE TEMPLATE - Premium Digital Business Card
+    Features: Hero with wave, monogram badge, floating dock, modular cards
+   ═══════════════════════════════════════════════════════════════════════════════ *@
+
+@using System.Text.Json
+
+<div class="coral-wave-template">
+    @* ═══════════════════════════════════════════════════════════════════════════
+       HERO SECTION - Full-bleed background with gradient overlay
+       ═══════════════════════════════════════════════════════════════════════════ *@
+    <section class="hero-section">
+        @* Background Image *@
+        <div class="hero-background" style="background-image: url('@GetCoverImageUrl()')"></div>
+        
+        @* Gradient Overlay for text legibility *@
+        <div class="hero-gradient-overlay"></div>
+        
+        @* Hero Content *@
+        <div class="hero-content">
+            <h1 class="hero-name">@Profile.Name</h1>
+            <p class="hero-title">@Profile.Title</p>
+            <p class="hero-company">@Profile.Company</p>
+            
+            @* Quick Actions Row *@
+            <div class="quick-actions">
+                @if (!string.IsNullOrEmpty(Contact.Phone))
+                {
+                    <button class="action-btn" @onclick="() => OnCallClick()" title="Call">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                        </svg>
+                    </button>
+                }
+                @if (!string.IsNullOrEmpty(Contact.Email))
+                {
+                    <button class="action-btn" @onclick="() => OnEmailClick()" title="Email">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
+                    </button>
+                }
+                @if (!string.IsNullOrEmpty(Contact.WhatsApp))
+                {
+                    <button class="action-btn" @onclick="() => OnWhatsAppClick()" title="WhatsApp">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        </svg>
+                    </button>
+                }
+            </div>
+        </div>
+        
+        @* Monogram Badge *@
+        <div class="monogram-badge">
+            @GetMonogramLetter()
+        </div>
+    </section>
+    
+    @* ═══════════════════════════════════════════════════════════════════════════
+       WAVE SEPARATOR - SVG ondulado coral
+       ═══════════════════════════════════════════════════════════════════════════ *@
+    <div class="wave-separator">
+        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <path d="M0,60 C360,120 720,0 1080,60 C1260,90 1380,80 1440,60 L1440,120 L0,120 Z" fill="#FBE3E5"/>
+            <path d="M0,80 Q360,20 720,80 T1440,80" stroke="#E64F58" stroke-width="3" fill="none"/>
+        </svg>
+    </div>
+    
+    @* ═══════════════════════════════════════════════════════════════════════════
+       BODY CONTENT - Cards on pink background
+       ═══════════════════════════════════════════════════════════════════════════ *@
+    <main class="body-content">
+        
+        @* ─────────────────────────────────────────────────────────────────────
+           ABOUT ME CARD
+           ───────────────────────────────────────────────────────────────────── *@
+        @if (AboutMe.Enabled && !string.IsNullOrEmpty(AboutMe.Description))
+        {
+            <article class="card about-card">
+                <h2 class="card-title centered">About Me</h2>
+                <p class="card-description centered">@AboutMe.Description</p>
+            </article>
+        }
+        
+        @* ─────────────────────────────────────────────────────────────────────
+           CONTACT US CARD
+           ───────────────────────────────────────────────────────────────────── *@
+        @if (ContactCard.Enabled)
+        {
+            <article class="card contact-card">
+                <div class="card-header-row">
+                    <div class="header-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Contact Us</h2>
+                </div>
+                
+                <div class="contact-divider"></div>
+                
+                @if (!string.IsNullOrEmpty(Contact.Phone))
+                {
+                    <div class="contact-item">
+                        <span class="contact-label">Call Us</span>
+                        <span class="contact-value">@Contact.Phone</span>
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(Contact.Email))
+                {
+                    <div class="contact-item">
+                        <span class="contact-label">Email</span>
+                        <span class="contact-value">@Contact.Email</span>
+                    </div>
+                }
+                
+                @if (Contact.Address != null && !string.IsNullOrEmpty(Contact.Address.Street))
+                {
+                    <div class="contact-item">
+                        <span class="contact-label">Address</span>
+                        <span class="contact-value">
+                            @Contact.Address.Street<br/>
+                            @Contact.Address.City, @Contact.Address.State @Contact.Address.ZipCode<br/>
+                            @Contact.Address.Country
+                        </span>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Contact.MapUrl))
+                    {
+                        <button class="direction-btn" @onclick="() => OnDirectionClick()">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                                <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v3H8v-4c0-.55.45-1 1-1h5V7.5l3.5 3.5-3.5 3.5z"/>
+                            </svg>
+                            Direction
+                        </button>
+                    }
+                }
+            </article>
+        }
+        
+        @* ─────────────────────────────────────────────────────────────────────
+           WEB LINKS CARD
+           ───────────────────────────────────────────────────────────────────── *@
+        @if (WebLinks.Enabled && WebLinks.Links?.Any() == true)
+        {
+            <article class="card links-card">
+                <h2 class="card-title centered">Web Links</h2>
+                @if (!string.IsNullOrEmpty(WebLinks.Description))
+                {
+                    <p class="card-description centered">@WebLinks.Description</p>
+                }
+                
+                <div class="links-list">
+                    @foreach (var link in WebLinks.Links)
+                    {
+                        <a href="@link.Url" target="_blank" class="link-row" @onclick="() => OnLinkClick.InvokeAsync(link.Url)">
+                            <div class="link-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                                    <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                                </svg>
+                            </div>
+                            <div class="link-text">
+                                <span class="link-title">@link.Title</span>
+                                @if (!string.IsNullOrEmpty(link.Subtitle))
+                                {
+                                    <span class="link-subtitle">@link.Subtitle</span>
+                                }
+                            </div>
+                            <div class="link-chevron">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                                    <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                        </a>
+                    }
+                </div>
+            </article>
+        }
+        
+        @* ─────────────────────────────────────────────────────────────────────
+           SCHEDULE MEETING CARD
+           ───────────────────────────────────────────────────────────────────── *@
+        @if (Schedule.Enabled)
+        {
+            <article class="card schedule-card">
+                <h2 class="card-title centered">Schedule Meeting</h2>
+                @if (!string.IsNullOrEmpty(Schedule.Description))
+                {
+                    <p class="card-description centered">@Schedule.Description</p>
+                }
+                
+                <div class="schedule-buttons">
+                    @if (!string.IsNullOrEmpty(Schedule.CalendlyUrl))
+                    {
+                        <a href="@Schedule.CalendlyUrl" target="_blank" class="schedule-btn">
+                            Book on Calendly
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(Schedule.AddToCalendarUrl))
+                    {
+                        <a href="@Schedule.AddToCalendarUrl" target="_blank" class="schedule-btn secondary">
+                            Add to Calendar
+                        </a>
+                    }
+                </div>
+            </article>
+        }
+        
+        @* Spacer for dock *@
+        <div class="dock-spacer"></div>
+    </main>
+    
+    @* ═══════════════════════════════════════════════════════════════════════════
+       FLOATING DOCK - Sticky bottom navigation
+       ═══════════════════════════════════════════════════════════════════════════ *@
+    <nav class="floating-dock">
+        <div class="dock-left">
+            <button class="dock-btn" @onclick="OnQrClick" title="Show QR Code">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                    <path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM13 13h2v2h-2zM15 15h2v2h-2zM13 17h2v2h-2zM17 13h2v2h-2zM19 15h2v2h-2zM17 17h2v2h-2zM15 19h2v2h-2zM19 19h2v2h-2z"/>
+                </svg>
+            </button>
+            <button class="dock-btn" @onclick="OnShareClick" title="Share">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                    <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                </svg>
+            </button>
+        </div>
+        <div class="dock-right">
+            <button class="dock-btn-pill" @onclick="OnAddToContactClick">
+                Add to Contact
+            </button>
+            <button class="dock-btn-plus" @onclick="OnAddToContactClick" title="Add">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+            </button>
+        </div>
+    </nav>
+</div>
+
+<style>
+    /* ═══════════════════════════════════════════════════════════════════════════
+       DESIGN TOKENS
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .coral-wave-template {
+        --color-primary-navy: #021B47;
+        --color-accent-coral: #E64F58;
+        --color-background-pink: #FBE3E5;
+        --color-surface: #FFFFFF;
+        --color-text-primary: #0B0F1A;
+        --color-text-secondary: #6B7280;
+        --color-divider: #E5E7EB;
+        --color-button-soft: #FDE8E9;
+        
+        --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --font-size-name: 28px;
+        --font-size-section-title: 22px;
+        --font-size-body: 14px;
+        --font-size-label: 13px;
+        
+        --spacing-page-x: 16px;
+        --spacing-card-gap: 16px;
+        --spacing-card-padding: 20px;
+        
+        --radius-card: 20px;
+        --radius-pill: 999px;
+        
+        --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+        --shadow-dock: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        --shadow-button: 0 2px 8px rgba(230, 79, 88, 0.3);
+        
+        --z-hero-overlay: 1;
+        --z-monogram: 10;
+        --z-dock: 100;
+        
+        --hero-height: 45vh;
+        --dock-height: 70px;
+        --monogram-size: 80px;
+        --icon-button-size: 48px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       BASE TEMPLATE
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .coral-wave-template {
+        font-family: var(--font-family);
+        color: var(--color-text-primary);
+        background: var(--color-background-pink);
+        min-height: 100vh;
+        position: relative;
+        max-width: 430px;
+        margin: 0 auto;
+        overflow-x: hidden;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       HERO SECTION
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .hero-section {
+        position: relative;
+        height: var(--hero-height);
+        min-height: 320px;
+        display: flex;
+        align-items: flex-end;
+        padding: 24px var(--spacing-page-x);
+        padding-bottom: 60px;
+    }
+    
+    .hero-background {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center top;
+        background-color: var(--color-primary-navy);
+    }
+    
+    .hero-gradient-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 0.3) 60%,
+            rgba(0, 0, 0, 0.6) 100%
+        );
+        z-index: var(--z-hero-overlay);
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: calc(var(--z-hero-overlay) + 1);
+        color: white;
+    }
+    
+    .hero-name {
+        font-size: var(--font-size-name);
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .hero-title {
+        font-size: var(--font-size-body);
+        margin: 0 0 2px 0;
+        opacity: 0.9;
+    }
+    
+    .hero-company {
+        font-size: var(--font-size-body);
+        margin: 0 0 16px 0;
+        opacity: 0.8;
+    }
+    
+    /* Quick Actions */
+    .quick-actions {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .action-btn {
+        width: var(--icon-button-size);
+        height: var(--icon-button-size);
+        border-radius: 50%;
+        background: var(--color-accent-coral);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: var(--shadow-button);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    
+    .action-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .action-btn:active {
+        transform: scale(0.98);
+    }
+    
+    /* Monogram Badge */
+    .monogram-badge {
+        position: absolute;
+        right: var(--spacing-page-x);
+        bottom: -40px;
+        width: var(--monogram-size);
+        height: var(--monogram-size);
+        border-radius: 50%;
+        background: var(--color-primary-navy);
+        color: white;
+        font-size: 36px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: var(--z-monogram);
+        box-shadow: 0 4px 16px rgba(2, 27, 71, 0.3);
+        border: 4px solid white;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       WAVE SEPARATOR
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .wave-separator {
+        margin-top: -50px;
+        position: relative;
+        z-index: calc(var(--z-monogram) - 1);
+    }
+    
+    .wave-separator svg {
+        display: block;
+        width: 100%;
+        height: 80px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       BODY CONTENT
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .body-content {
+        padding: 20px var(--spacing-page-x);
+        padding-bottom: calc(var(--dock-height) + 20px);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-card-gap);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       CARDS BASE
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .card {
+        background: var(--color-surface);
+        border-radius: var(--radius-card);
+        padding: var(--spacing-card-padding);
+        box-shadow: var(--shadow-card);
+    }
+    
+    .card-title {
+        font-size: var(--font-size-section-title);
+        font-weight: 700;
+        color: var(--color-accent-coral);
+        margin: 0 0 12px 0;
+    }
+    
+    .card-title.centered {
+        text-align: center;
+    }
+    
+    .card-description {
+        font-size: var(--font-size-body);
+        color: var(--color-text-secondary);
+        margin: 0;
+        line-height: 1.5;
+    }
+    
+    .card-description.centered {
+        text-align: center;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       ABOUT ME CARD
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .about-card {
+        text-align: center;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       CONTACT US CARD
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .card-header-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--color-text-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .contact-divider {
+        border-bottom: 2px dotted var(--color-divider);
+        margin-bottom: 16px;
+    }
+    
+    .contact-item {
+        margin-bottom: 16px;
+    }
+    
+    .contact-label {
+        display: block;
+        font-size: var(--font-size-label);
+        font-weight: 600;
+        color: var(--color-accent-coral);
+        margin-bottom: 4px;
+    }
+    
+    .contact-value {
+        display: block;
+        font-size: var(--font-size-body);
+        color: var(--color-text-secondary);
+        line-height: 1.4;
+    }
+    
+    .direction-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: var(--color-accent-coral);
+        color: white;
+        border: none;
+        border-radius: var(--radius-pill);
+        font-size: var(--font-size-body);
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: var(--shadow-button);
+        transition: transform 0.15s ease;
+    }
+    
+    .direction-btn:hover {
+        transform: scale(1.02);
+    }
+    
+    .direction-btn:active {
+        transform: scale(0.98);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       WEB LINKS CARD
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .links-card .card-description {
+        margin-bottom: 16px;
+    }
+    
+    .links-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .link-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 0;
+        text-decoration: none;
+        color: inherit;
+        border-bottom: 1px solid var(--color-divider);
+        transition: background 0.15s ease;
+    }
+    
+    .link-row:last-child {
+        border-bottom: none;
+    }
+    
+    .link-row:active {
+        background: rgba(0,0,0,0.02);
+    }
+    
+    .link-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--color-divider);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-text-secondary);
+        flex-shrink: 0;
+    }
+    
+    .link-text {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .link-title {
+        display: block;
+        font-size: var(--font-size-body);
+        font-weight: 500;
+        color: var(--color-accent-coral);
+    }
+    
+    .link-subtitle {
+        display: block;
+        font-size: var(--font-size-label);
+        color: var(--color-text-secondary);
+    }
+    
+    .link-chevron {
+        color: var(--color-accent-coral);
+        flex-shrink: 0;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       SCHEDULE CARD
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .schedule-card .card-description {
+        margin-bottom: 20px;
+    }
+    
+    .schedule-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .schedule-btn {
+        display: block;
+        width: 100%;
+        padding: 14px 24px;
+        text-align: center;
+        background: var(--color-accent-coral);
+        color: white;
+        border: none;
+        border-radius: var(--radius-pill);
+        font-size: var(--font-size-body);
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: var(--shadow-button);
+        transition: transform 0.15s ease;
+    }
+    
+    .schedule-btn.secondary {
+        background: var(--color-button-soft);
+        color: var(--color-accent-coral);
+        box-shadow: none;
+    }
+    
+    .schedule-btn:hover {
+        transform: scale(1.02);
+    }
+    
+    .schedule-btn:active {
+        transform: scale(0.98);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       FLOATING DOCK
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .dock-spacer {
+        height: calc(var(--dock-height) + 20px);
+    }
+    
+    .floating-dock {
+        position: fixed;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 430px;
+        height: var(--dock-height);
+        background: var(--color-surface);
+        box-shadow: var(--shadow-dock);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 var(--spacing-page-x);
+        z-index: var(--z-dock);
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    
+    .dock-left,
+    .dock-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .dock-btn {
+        width: var(--icon-button-size);
+        height: var(--icon-button-size);
+        border-radius: 50%;
+        background: var(--color-accent-coral);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: var(--shadow-button);
+        transition: transform 0.15s ease;
+    }
+    
+    .dock-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .dock-btn:active {
+        transform: scale(0.98);
+    }
+    
+    .dock-btn-pill {
+        padding: 12px 20px;
+        background: var(--color-accent-coral);
+        color: white;
+        border: none;
+        border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+        font-size: var(--font-size-body);
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: var(--shadow-button);
+        transition: transform 0.15s ease;
+        margin-right: -4px;
+    }
+    
+    .dock-btn-plus {
+        width: var(--icon-button-size);
+        height: var(--icon-button-size);
+        border-radius: 50%;
+        background: var(--color-accent-coral);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: var(--shadow-button);
+        transition: transform 0.15s ease;
+    }
+    
+    .dock-btn-pill:hover,
+    .dock-btn-plus:hover {
+        transform: scale(1.02);
+    }
+    
+    .dock-btn-pill:active,
+    .dock-btn-plus:active {
+        transform: scale(0.98);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════════════════════════ */
+    @@media (min-width: 431px) {
+        .coral-wave-template {
+            border-left: 1px solid var(--color-divider);
+            border-right: 1px solid var(--color-divider);
+        }
+    }
+</style>
+
+@code {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PARAMETERS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    [Parameter] public ProfileData Profile { get; set; } = new();
+    [Parameter] public ContactData Contact { get; set; } = new();
+    [Parameter] public AboutMeData AboutMe { get; set; } = new();
+    [Parameter] public ContactCardData ContactCard { get; set; } = new();
+    [Parameter] public WebLinksData WebLinks { get; set; } = new();
+    [Parameter] public ScheduleData Schedule { get; set; } = new();
+    
+    // Event callbacks
+    [Parameter] public EventCallback OnQrClick { get; set; }
+    [Parameter] public EventCallback OnShareClick { get; set; }
+    [Parameter] public EventCallback OnAddToContactClick { get; set; }
+    [Parameter] public EventCallback<string> OnLinkClick { get; set; }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // HELPER METHODS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    private string GetCoverImageUrl()
+    {
+        if (!string.IsNullOrEmpty(Profile.CoverImageUrl))
+            return Profile.CoverImageUrl;
+        // Fallback gradient handled by CSS
+        return "";
+    }
+    
+    private string GetMonogramLetter()
+    {
+        if (!string.IsNullOrEmpty(Profile.MonogramLetter))
+            return Profile.MonogramLetter;
+        if (!string.IsNullOrEmpty(Profile.Name))
+            return Profile.Name[0].ToString().ToUpper();
+        return "?";
+    }
+    
+    private void OnCallClick()
+    {
+        // Navigate to tel:
+    }
+    
+    private void OnEmailClick()
+    {
+        // Navigate to mailto:
+    }
+    
+    private void OnWhatsAppClick()
+    {
+        // Navigate to WhatsApp URL
+    }
+    
+    private void OnDirectionClick()
+    {
+        // Open map URL
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DATA MODELS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    public class ProfileData
+    {
+        public string Name { get; set; } = "Name";
+        public string Title { get; set; } = "Title";
+        public string Company { get; set; } = "Company";
+        public string CoverImageUrl { get; set; } = "";
+        public string ProfileImageUrl { get; set; } = "";
+        public string MonogramLetter { get; set; } = "";
+    }
+    
+    public class ContactData
+    {
+        public string Phone { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string WhatsApp { get; set; } = "";
+        public AddressData? Address { get; set; }
+        public string MapUrl { get; set; } = "";
+    }
+    
+    public class AddressData
+    {
+        public string Street { get; set; } = "";
+        public string City { get; set; } = "";
+        public string State { get; set; } = "";
+        public string ZipCode { get; set; } = "";
+        public string Country { get; set; } = "";
+    }
+    
+    public class AboutMeData
+    {
+        public bool Enabled { get; set; } = true;
+        public string Description { get; set; } = "";
+    }
+    
+    public class ContactCardData
+    {
+        public bool Enabled { get; set; } = true;
+    }
+    
+    public class WebLinksData
+    {
+        public bool Enabled { get; set; } = true;
+        public string Description { get; set; } = "";
+        public List<WebLinkItem> Links { get; set; } = new();
+    }
+    
+    public class WebLinkItem
+    {
+        public string Title { get; set; } = "";
+        public string Subtitle { get; set; } = "";
+        public string Url { get; set; } = "";
+        public string Icon { get; set; } = "link";
+    }
+    
+    public class ScheduleData
+    {
+        public bool Enabled { get; set; } = true;
+        public string Description { get; set; } = "Schedule a meeting to discuss potential opportunities for collaboration";
+        public string CalendlyUrl { get; set; } = "";
+        public string AddToCalendarUrl { get; set; } = "";
+    }
+}

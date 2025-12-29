@@ -1,0 +1,163 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# .gitignore para DataTouch - .NET 9 / Blazor Server / MudBlazor
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# COMPILACIÓN Y BUILD
+# ═══════════════════════════════════════════════════════════════════════════════
+bin/
+obj/
+out/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+bld/
+Bin/
+Obj/
+
+# MSBuild
+*.log
+*.binlog
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+packages/
+*.nuget.props
+*.nuget.targets
+
+# .NET publish profiles
+PublishProfiles/
+launchSettings.json.user
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IDE Y EDITOR
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.cache
+*.pidb
+*.pdb
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ARCHIVOS DE SISTEMA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONFIGURACIÓN SENSIBLE Y SECRETOS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Archivos de configuración con secretos
+appsettings.*.local.json
+appsettings.Production.json
+secrets.json
+.env
+.env.local
+.env.*.local
+
+# User Secrets (Development)
+!appsettings.Development.json
+
+# Certificados
+*.pfx
+*.p12
+*.cer
+*.pem
+*.key
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENTITY FRAMEWORK CORE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Migraciones locales no commitear a menos que sean intencionales
+# Migrations/
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TESTING
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Test Results
+*.trx
+TestResults/
+coverage/
+coverlet/
+*.coverage
+*.coveragexml
+coverage.opencover.xml
+coverage.cobertura.xml
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# UPLOADS Y ARCHIVOS GENERADOS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Archivos subidos por usuarios (si aplica)
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OTROS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Node modules (si se usa npm/yarn para frontend tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Logs de la aplicación
+logs/
+*.log
+*.log.*
+
+# Docker
+docker-compose.override.yml
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*.bak

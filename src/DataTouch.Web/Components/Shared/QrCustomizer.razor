@@ -1,0 +1,288 @@
+@using DataTouch.Domain.Entities
+
+<div class="qr-customizer">
+    <MudText Typo="Typo.h6" Class="mb-4">Personaliza tu código QR</MudText>
+    
+    <div class="qr-preview-section">
+        @* QR Preview *@
+        <div class="qr-preview" style="@GetQrPreviewStyle()">
+            <div class="qr-mock" style="@GetQrMockStyle()">
+                @* Simplified QR pattern *@
+                <div class="qr-pattern">
+                    <div class="qr-corner top-left" style="@GetQrElementStyle()"></div>
+                    <div class="qr-corner top-right" style="@GetQrElementStyle()"></div>
+                    <div class="qr-corner bottom-left" style="@GetQrElementStyle()"></div>
+                    <div class="qr-center">
+                        @if (!string.IsNullOrEmpty(Style.QrLogoUrl))
+                        {
+                            <img src="@Style.QrLogoUrl" alt="Logo" class="qr-logo" />
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <MudDivider Class="my-4" />
+    
+    @* QR Shape *@
+    <MudText Typo="Typo.subtitle2" Class="mb-2">Forma del código</MudText>
+    <div class="qr-shape-options mb-4">
+        <div class="shape-option @(Style.QrShape == "square" ? "selected" : "")"
+             @onclick="@(() => SetQrShape("square"))">
+            <div class="shape-preview square"></div>
+            <MudText Typo="Typo.caption">Cuadrado</MudText>
+        </div>
+        <div class="shape-option @(Style.QrShape == "rounded" ? "selected" : "")"
+             @onclick="@(() => SetQrShape("rounded"))">
+            <div class="shape-preview rounded"></div>
+            <MudText Typo="Typo.caption">Redondeado</MudText>
+        </div>
+        <div class="shape-option @(Style.QrShape == "dots" ? "selected" : "")"
+             @onclick="@(() => SetQrShape("dots"))">
+            <div class="shape-preview dots"></div>
+            <MudText Typo="Typo.caption">Puntos</MudText>
+        </div>
+    </div>
+    
+    @* QR Colors *@
+    <MudGrid Spacing="2" Class="mb-4">
+        <MudItem xs="6">
+            <MudText Typo="Typo.caption" Class="mb-1">Color del código</MudText>
+            <div class="color-picker-wrapper">
+                <input type="color" @bind="Style.QrForeground" class="color-input" />
+                <MudTextField @bind-Value="Style.QrForeground" Variant="Variant.Outlined" 
+                              Dense="true" Class="color-text" />
+            </div>
+        </MudItem>
+        <MudItem xs="6">
+            <MudText Typo="Typo.caption" Class="mb-1">Fondo del QR</MudText>
+            <div class="color-picker-wrapper">
+                <input type="color" @bind="Style.QrBackground" class="color-input" />
+                <MudTextField @bind-Value="Style.QrBackground" Variant="Variant.Outlined" 
+                              Dense="true" Class="color-text" />
+            </div>
+        </MudItem>
+    </MudGrid>
+    
+    @* QR Logo *@
+    <MudTextField @bind-Value="Style.QrLogoUrl" Label="Logo central (URL)" 
+                  Variant="Variant.Outlined" Dense="true"
+                  HelperText="Opcional: URL de un logo para el centro del QR"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Image" />
+    
+    @* Color Presets *@
+    <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Esquemas de color rápidos</MudText>
+    <div class="color-presets">
+        @foreach (var preset in _colorPresets)
+        {
+            <div class="color-preset" 
+                 style="background: linear-gradient(135deg, @preset.Foreground 50%, @preset.Background 50%);"
+                 @onclick="() => ApplyColorPreset(preset)"
+                 title="@preset.Name">
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .qr-customizer {
+        padding: 16px;
+    }
+    
+    .qr-preview-section {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+    
+    .qr-preview {
+        width: 180px;
+        height: 180px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+    
+    .qr-mock {
+        width: 140px;
+        height: 140px;
+        border-radius: 8px;
+        position: relative;
+        padding: 8px;
+    }
+    
+    .qr-pattern {
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+    
+    .qr-corner {
+        position: absolute;
+        width: 32px;
+        height: 32px;
+    }
+    
+    .qr-corner.top-left { top: 0; left: 0; }
+    .qr-corner.top-right { top: 0; right: 0; }
+    .qr-corner.bottom-left { bottom: 0; left: 0; }
+    
+    .qr-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .qr-logo {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 4px;
+    }
+    
+    .qr-shape-options {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .shape-option {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        border: 2px solid var(--mud-palette-lines-default);
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+    
+    .shape-option:hover {
+        border-color: var(--mud-palette-primary);
+    }
+    
+    .shape-option.selected {
+        border-color: var(--mud-palette-primary);
+        background: rgba(99, 102, 241, 0.08);
+    }
+    
+    .shape-preview {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 8px;
+        background: var(--mud-palette-text-primary);
+    }
+    
+    .shape-preview.square {
+        border-radius: 0;
+    }
+    
+    .shape-preview.rounded {
+        border-radius: 8px;
+    }
+    
+    .shape-preview.dots {
+        border-radius: 50%;
+    }
+    
+    .color-picker-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .color-input {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        padding: 0;
+    }
+    
+    .color-text {
+        flex: 1;
+    }
+    
+    .color-presets {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .color-preset {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s ease;
+    }
+    
+    .color-preset:hover {
+        transform: scale(1.1);
+    }
+</style>
+
+@code {
+    [Parameter] public CardStyle Style { get; set; } = new();
+    [Parameter] public EventCallback<CardStyle> StyleChanged { get; set; }
+    
+    private readonly List<(string Name, string Foreground, string Background)> _colorPresets = new()
+    {
+        ("Clásico", "#000000", "#FFFFFF"),
+        ("Invertido", "#FFFFFF", "#000000"),
+        ("Azul", "#1E40AF", "#FFFFFF"),
+        ("Púrpura", "#7C3AED", "#FFFFFF"),
+        ("Verde", "#059669", "#FFFFFF"),
+        ("Rosa", "#DB2777", "#FFFFFF"),
+        ("Naranja", "#EA580C", "#FFFFFF"),
+        ("Oscuro", "#1F2937", "#F3F4F6")
+    };
+    
+    private void SetQrShape(string shape)
+    {
+        Style.QrShape = shape;
+        NotifyStyleChanged();
+    }
+    
+    private void ApplyColorPreset((string Name, string Foreground, string Background) preset)
+    {
+        Style.QrForeground = preset.Foreground;
+        Style.QrBackground = preset.Background;
+        NotifyStyleChanged();
+    }
+    
+    private async void NotifyStyleChanged()
+    {
+        await StyleChanged.InvokeAsync(Style);
+    }
+    
+    private string GetQrPreviewStyle()
+    {
+        return $"background: linear-gradient(135deg, {Style.QrForeground}20, {Style.QrForeground}10);";
+    }
+    
+    private string GetQrMockStyle()
+    {
+        return $"background: {Style.QrBackground};";
+    }
+    
+    private string GetQrElementStyle()
+    {
+        var borderRadius = Style.QrShape switch
+        {
+            "rounded" => "4px",
+            "dots" => "50%",
+            _ => "0"
+        };
+        return $"background: {Style.QrForeground}; border-radius: {borderRadius};";
+    }
+}
