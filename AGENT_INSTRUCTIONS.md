@@ -4,6 +4,51 @@ Este archivo contiene prompts optimizados para que un agente LLM con capacidad d
 
 ---
 
+## ⭐ Prompt 0: Auto-Setup Leyendo Documentación (RECOMENDADO)
+
+Este es el prompt más completo y autónomo. El agente leerá la documentación del proyecto y ejecutará los pasos automáticamente:
+
+```
+Clona el repositorio https://github.com/AlvarengaLeo/DataTouch.git y configúralo siguiendo la documentación oficial del proyecto.
+
+Instrucciones:
+1. Clona el repositorio en una carpeta local
+2. Lee el archivo README.md para entender la estructura del proyecto
+3. Lee el archivo SETUP.md y sigue TODOS los pasos de instalación que describe
+4. Verifica los prerrequisitos (.NET 9, Docker si aplica)
+5. Instala las dependencias necesarias
+6. Ejecuta la aplicación
+7. Verifica que funciona accediendo a las URLs indicadas en la documentación
+8. Si encuentras errores, consulta la sección de Troubleshooting en SETUP.md
+
+Credenciales de demo: admin@demo.com / admin123
+
+Ejecuta cada paso y confírmame cuando la aplicación esté funcionando correctamente.
+```
+
+---
+
+## ⭐ Prompt 0.1: Auto-Setup con Base de Datos
+
+Si necesitas configurar MySQL además de la aplicación:
+
+```
+Clona el repositorio https://github.com/AlvarengaLeo/DataTouch.git y configúralo con MySQL.
+
+Instrucciones:
+1. Clona el repositorio
+2. Lee el archivo SETUP.md - sección "Configuración de Base de Datos"
+3. Lee el archivo DATABASE.md para entender el esquema de tablas
+4. Configura MySQL siguiendo los pasos de la documentación (usando Docker)
+5. Modifica el Program.cs según indica SETUP.md para usar MySQL en lugar de InMemory
+6. Ejecuta los scripts SQL de DATABASE.md si es necesario
+7. Ejecuta la aplicación y verifica la conexión a la base de datos
+
+Si hay errores de conexión, revisa la sección de troubleshooting.
+```
+
+---
+
 ## Prompt 1: Clonar y Ejecutar (Básico)
 
 Copia y pega este prompt al agente:
