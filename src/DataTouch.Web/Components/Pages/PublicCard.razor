@@ -30,13 +30,13 @@ else
        LANDING PÚBLICA - ESTRUCTURA EN 3 BLOQUES
        Fondo continuo en gradient, sin cortes blancos
        ═══════════════════════════════════════════════════════════════════════════ *@
-    <div class="landing-wrapper">
+    <div class="landing-wrapper @GetBackgroundContrastClass()" style="@GetDynamicBackgroundStyle()">
         
         @* ─────────────────────────────────────────────────────────────────────────
            BLOQUE 1: HERO / PERFIL
            Card principal con foto, nombre, puesto, bio y links
            ───────────────────────────────────────────────────────────────────────── *@
-        <div class="profile-card">
+        <div class="profile-card @GetCardContrastClass()">
             <div class="card-header-gradient"></div>
             <div class="card-content">
                 @* Avatar *@
@@ -185,7 +185,7 @@ else
            BLOQUE 3: FORMULARIO DE LEAD PREMIUM
            Diseño enterprise-grade con validación avanzada de teléfono
            ───────────────────────────────────────────────────────────────────────── *@
-        <div class="lead-form-card @(_showSuccess ? "success-state" : "")">
+        <div class="lead-form-card @GetCardContrastClass() @(_showSuccess ? "success-state" : "")">
             @if (_showSuccess)
             {
                 @* Success Overlay Animation *@
@@ -1489,6 +1489,139 @@ else
             min-width: 120px;
         }
     }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       AUTO-CONTRAST SYSTEM
+       Dynamic text colors based on surface luminance
+       ═══════════════════════════════════════════════════════════════ */
+    
+    /* === MODO OSCURO (texto claro sobre fondo oscuro) === */
+    .contrast-dark {
+        --surface-text-primary: #FFFFFF;
+        --surface-text-secondary: rgba(255, 255, 255, 0.75);
+        --surface-text-muted: rgba(255, 255, 255, 0.5);
+        --surface-input-bg: rgba(255, 255, 255, 0.08);
+        --surface-input-border: rgba(255, 255, 255, 0.2);
+        --surface-input-text: #FFFFFF;
+        --surface-input-placeholder: rgba(255, 255, 255, 0.5);
+        --surface-icon: rgba(255, 255, 255, 0.85);
+        --surface-chip-bg: rgba(255, 255, 255, 0.1);
+        --surface-chip-text: rgba(255, 255, 255, 0.8);
+        --surface-chip-border: rgba(255, 255, 255, 0.15);
+        --surface-label-text: rgba(255, 255, 255, 0.85);
+    }
+    
+    /* === MODO CLARO (texto oscuro sobre fondo claro) === */
+    .contrast-light {
+        --surface-text-primary: #1A1A2E;
+        --surface-text-secondary: rgba(26, 26, 46, 0.75);
+        --surface-text-muted: rgba(26, 26, 46, 0.5);
+        --surface-input-bg: rgba(0, 0, 0, 0.06);
+        --surface-input-border: rgba(0, 0, 0, 0.25);
+        --surface-input-text: #1A1A2E;
+        --surface-input-placeholder: rgba(0, 0, 0, 0.45);
+        --surface-icon: rgba(26, 26, 46, 0.85);
+        --surface-chip-bg: rgba(0, 0, 0, 0.08);
+        --surface-chip-text: rgba(26, 26, 46, 0.8);
+        --surface-chip-border: rgba(0, 0, 0, 0.15);
+        --surface-label-text: rgba(26, 26, 46, 0.85);
+    }
+    
+    /* Profile card text - contrast aware */
+    .profile-card.contrast-dark .profile-name,
+    .profile-card.contrast-light .profile-name {
+        color: var(--surface-text-primary) !important;
+    }
+    
+    .profile-card.contrast-dark .profile-title,
+    .profile-card.contrast-dark .profile-bio,
+    .profile-card.contrast-light .profile-title,
+    .profile-card.contrast-light .profile-bio {
+        color: var(--surface-text-secondary) !important;
+    }
+    
+    .profile-card.contrast-dark .profile-location,
+    .profile-card.contrast-light .profile-location {
+        color: var(--surface-text-muted) !important;
+    }
+    
+    /* Status chips - contrast aware */
+    .profile-card.contrast-dark .status-chip,
+    .profile-card.contrast-light .status-chip {
+        background: var(--surface-chip-bg) !important;
+        color: var(--surface-chip-text) !important;
+        border-color: var(--surface-chip-border) !important;
+    }
+    
+    /* Form header - contrast aware */
+    .lead-form-card.contrast-dark .form-title,
+    .lead-form-card.contrast-light .form-title {
+        color: var(--surface-text-primary) !important;
+    }
+    
+    .lead-form-card.contrast-dark .form-subtitle,
+    .lead-form-card.contrast-light .form-subtitle {
+        color: var(--surface-text-muted) !important;
+    }
+    
+    /* Labels - contrast aware */
+    .lead-form-card.contrast-dark .compact-label,
+    .lead-form-card.contrast-light .compact-label {
+        color: var(--surface-label-text) !important;
+    }
+    
+    .lead-form-card.contrast-dark .label-icon,
+    .lead-form-card.contrast-light .label-icon {
+        color: var(--surface-icon) !important;
+    }
+    
+    /* Native inputs - contrast aware */
+    .lead-form-card.contrast-dark .native-text-input,
+    .lead-form-card.contrast-dark .native-textarea-input,
+    .lead-form-card.contrast-light .native-text-input,
+    .lead-form-card.contrast-light .native-textarea-input {
+        background: var(--surface-input-bg) !important;
+        border-color: var(--surface-input-border) !important;
+        color: var(--surface-input-text) !important;
+        -webkit-text-fill-color: var(--surface-input-text) !important;
+    }
+    
+    .lead-form-card.contrast-dark .native-text-input::placeholder,
+    .lead-form-card.contrast-dark .native-textarea-input::placeholder,
+    .lead-form-card.contrast-light .native-text-input::placeholder,
+    .lead-form-card.contrast-light .native-textarea-input::placeholder {
+        color: var(--surface-input-placeholder) !important;
+        -webkit-text-fill-color: var(--surface-input-placeholder) !important;
+    }
+    
+    /* MudBlazor inputs in form - contrast aware */
+    .lead-form-card.contrast-dark .mud-input-slot,
+    .lead-form-card.contrast-dark .mud-input > input,
+    .lead-form-card.contrast-dark .mud-select-input,
+    .lead-form-card.contrast-light .mud-input-slot,
+    .lead-form-card.contrast-light .mud-input > input,
+    .lead-form-card.contrast-light .mud-select-input {
+        color: var(--surface-input-text) !important;
+        -webkit-text-fill-color: var(--surface-input-text) !important;
+    }
+    
+    /* Icons in inputs - contrast aware */
+    .lead-form-card.contrast-dark .input-adornment .mud-icon-root,
+    .lead-form-card.contrast-light .input-adornment .mud-icon-root {
+        color: var(--surface-icon) !important;
+    }
+    
+    /* Social icons - contrast aware */
+    .profile-card.contrast-dark .social-icon,
+    .profile-card.contrast-light .social-icon {
+        color: var(--surface-icon) !important;
+    }
+    
+    /* Gallery title - contrast aware */
+    .profile-card.contrast-dark .gallery-section-title,
+    .profile-card.contrast-light .gallery-section-title {
+        color: var(--surface-text-primary) !important;
+    }
 </style>
 
 @code {
@@ -1523,6 +1656,9 @@ else
     private bool _lightboxOpen = false;
     private GalleryImageModel? _selectedImage;
     private int _selectedIndex = 0;
+    
+    // Appearance Style
+    private CardStyleModel _cardStyle = new();
 
     private MudTheme _theme = new()
     {
@@ -1618,6 +1754,16 @@ else
                 _galleryImages = System.Text.Json.JsonSerializer.Deserialize<List<GalleryImageModel>>(_card.GalleryImagesJson) ?? new();
             }
             catch { _galleryImages = new(); }
+        }
+        
+        // Appearance Style
+        if (!string.IsNullOrEmpty(_card?.AppearanceStyleJson))
+        {
+            try
+            {
+                _cardStyle = System.Text.Json.JsonSerializer.Deserialize<CardStyleModel>(_card.AppearanceStyleJson) ?? new();
+            }
+            catch { _cardStyle = new(); }
         }
     }
     
@@ -1761,6 +1907,53 @@ END:VCARD";
         public string? Title { get; set; }
         public string? Description { get; set; }
         public int Order { get; set; }
+    }
+    
+    private class CardStyleModel
+    {
+        public string BackgroundType { get; set; } = "gradient";
+        public string BackgroundValue { get; set; } = "linear-gradient(135deg, #1a1035 0%, #2d1b4e 50%, #1a1035 100%)";
+        public string? BackgroundImageUrl { get; set; }
+        public string CardContainerStyle { get; set; } = "glass";
+        public int GlassIntensity { get; set; } = 40;
+        public string BorderRadius { get; set; } = "medium";
+        public string ShadowStyle { get; set; } = "soft";
+        public string AvatarSize { get; set; } = "M";
+        public bool AvatarGlow { get; set; } = true;
+        public string ButtonShape { get; set; } = "rounded";
+        public string ButtonStyle { get; set; } = "filled";
+        public double OverlayOpacity { get; set; } = 0.3;
+        public bool ShowGrain { get; set; } = false;
+        
+        // Contrast settings
+        public string ContrastMode { get; set; } = "auto";
+        public bool BackgroundIsDark { get; set; } = true;
+        public bool CardIsDark { get; set; } = true;
+    }
+    
+    private string GetDynamicBackgroundStyle()
+    {
+        if (_cardStyle.BackgroundType == "image" && !string.IsNullOrEmpty(_cardStyle.BackgroundImageUrl))
+            return $"background: url('{_cardStyle.BackgroundImageUrl}') center/cover no-repeat, linear-gradient(180deg, #0d0a1a 0%, #1a1035 100%);";
+        if (_cardStyle.BackgroundType == "solid")
+            return $"background: {_cardStyle.BackgroundValue};";
+        return $"background: {_cardStyle.BackgroundValue};";
+    }
+    
+    // Get contrast class for background surface
+    private string GetBackgroundContrastClass()
+    {
+        if (_cardStyle.ContrastMode == "force-light") return "contrast-light";
+        if (_cardStyle.ContrastMode == "force-dark") return "contrast-dark";
+        return _cardStyle.BackgroundIsDark ? "contrast-dark" : "contrast-light";
+    }
+    
+    // Get contrast class for card surface
+    private string GetCardContrastClass()
+    {
+        if (_cardStyle.ContrastMode == "force-light") return "contrast-light";
+        if (_cardStyle.ContrastMode == "force-dark") return "contrast-dark";
+        return _cardStyle.CardIsDark ? "contrast-dark" : "contrast-light";
     }
     
     // Gallery Lightbox Methods

@@ -131,6 +131,258 @@ else
 
 
                 @* ─────────────────────────────────────────────────────────
+                   LEVEL 2 (COLLAPSIBLE): APARIENCIA
+                   ───────────────────────────────────────────────────────── *@
+                <section class="section-card section-level-2 section-appearance">
+                    <div class="section-header section-header-collapsible" @onclick="ToggleAppearanceSection">
+                        <div class="section-icon icon-appearance">
+                            <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Medium" />
+                        </div>
+                        <div class="section-header-text">
+                            <h2 class="section-title">Apariencia</h2>
+                            <p class="section-description">Personaliza el fondo y el estilo visual de tu tarjeta pública.</p>
+                        </div>
+                        <div class="appearance-chips-summary">
+                            <span class="summary-chip">Fondo: @GetBackgroundSummary()</span>
+                            <span class="summary-chip">Tarjeta: @GetCardSummary()</span>
+                            <span class="summary-chip">Acciones: @GetButtonsSummary()</span>
+                        </div>
+                        <MudIcon Icon="@(_appearanceSectionExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" 
+                                 Size="Size.Medium" 
+                                 Class="section-collapse-icon" />
+                    </div>
+                    <MudCollapse Expanded="_appearanceSectionExpanded">
+                        <div class="section-content appearance-content">
+                            @* PRESETS RECOMENDADOS *@
+                            <div class="appearance-block">
+                                <h3 class="appearance-block-title">Presets recomendados</h3>
+                                <div class="appearance-presets-grid">
+                                    @foreach (var preset in _presets)
+                                    {
+                                        <div class="appearance-preset-card @(preset.Id == _selectedPreset ? "selected" : "")" 
+                                             @onclick="() => ApplyPreset(preset.Id)">
+                                            <div class="preset-preview" style="background: @preset.BackgroundValue;"></div>
+                                            <span class="preset-name">@preset.Name</span>
+                                            @if (preset.Id == _selectedPreset)
+                                            {
+                                                <span class="preset-check">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                                                </span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            @* FONDO Y TARJETA EN GRID *@
+                            <div class="appearance-options-row">
+                                @* FONDO *@
+                                <div class="appearance-block">
+                                    <h3 class="appearance-block-title">Fondo</h3>
+                                    <div class="segment-selector">
+                                        <button class="segment-btn @(_cardStyle.BackgroundType == "gradient" ? "active" : "")" 
+                                                @onclick="SetBackgroundGradient">
+                                            Gradiente
+                                        </button>
+                                        <button class="segment-btn @(_cardStyle.BackgroundType == "solid" ? "active" : "")" 
+                                                @onclick="SetBackgroundSolid">
+                                            Sólido
+                                        </button>
+                                        <button class="segment-btn @(_cardStyle.BackgroundType == "image" ? "active" : "")" 
+                                                @onclick="SetBackgroundImage">
+                                            Imagen
+                                        </button>
+                                    </div>
+                                    @if (_cardStyle.BackgroundType == "image")
+                                    {
+                                        <MudFileUpload T="IBrowserFile" 
+                                                       FilesChanged="UploadBackgroundImage" 
+                                                       Accept="image/png,image/jpeg,image/webp"
+                                                       Class="mt-3">
+                                            <ActivatorContent>
+                                                <MudButton Variant="Variant.Outlined" 
+                                                           Color="Color.Primary" 
+                                                           StartIcon="@Icons.Material.Filled.Upload"
+                                                           Size="Size.Small">
+                                                    Subir imagen
+                                                </MudButton>
+                                            </ActivatorContent>
+                                        </MudFileUpload>
+                                    }
+                                </div>
+
+                                @* TARJETA *@
+                                <div class="appearance-block">
+                                    <h3 class="appearance-block-title">Tarjeta</h3>
+                                    <div class="segment-selector">
+                                        <button class="segment-btn @(_cardStyle.CardContainerStyle == "glass" ? "active" : "")" 
+                                                @onclick="SetCardStyleGlass">
+                                            Glass
+                                        </button>
+                                        <button class="segment-btn @(_cardStyle.CardContainerStyle == "solid" ? "active" : "")" 
+                                                @onclick="SetCardStyleSolid">
+                                            Solid
+                                        </button>
+                                        <button class="segment-btn @(_cardStyle.CardContainerStyle == "elevated" ? "active" : "")" 
+                                                @onclick="SetCardStyleElevated">
+                                            Elevated
+                                        </button>
+                                    </div>
+                                    @if (_cardStyle.CardContainerStyle == "glass")
+                                    {
+                                        <div class="intensity-slider">
+                                            <span class="slider-label">Intensidad</span>
+                                            <MudSlider T="int" Value="_cardStyle.GlassIntensity" 
+                                                       ValueChanged="OnGlassIntensityChanged"
+                                                       Min="0" Max="100" Step="10"
+                                                       Color="Color.Primary" />
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            @* MODO AVANZADO *@
+                            <div class="appearance-footer">
+                                <button class="advanced-toggle-link" @onclick="ToggleAdvancedMode">
+                                    @if (_advancedModeExpanded)
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.ExpandLess" Size="Size.Small" />
+                                        <span>Ocultar personalización avanzada</span>
+                                    }
+                                    else
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                                        <span>Personalización avanzada</span>
+                                    }
+                                </button>
+                                <button class="reset-link" @onclick="ResetAppearanceToDefault">
+                                    <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Size="Size.Small" />
+                                    <span>Restaurar</span>
+                                </button>
+                            </div>
+
+                            <MudCollapse Expanded="_advancedModeExpanded">
+                                <div class="advanced-options">
+                                    @* FONDO AVANZADO *@
+                                    <div class="advanced-block">
+                                        <h4 class="advanced-block-title">Fondo</h4>
+                                        <div class="advanced-controls">
+                                            <div class="control-row">
+                                                <span>Opacidad overlay</span>
+                                                <MudSlider T="double" @bind-Value="_cardStyle.OverlayOpacity" 
+                                                           Min="0" Max="1" Step="0.1"
+                                                           Color="Color.Primary" Size="Size.Small" />
+                                            </div>
+                                            <div class="control-row">
+                                                <span>Efecto grain</span>
+                                                <MudSwitch T="bool" @bind-Value="_cardStyle.ShowGrain" Color="Color.Primary" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @* CONTENEDOR AVANZADO *@
+                                    <div class="advanced-block">
+                                        <h4 class="advanced-block-title">Contenedor</h4>
+                                        <div class="advanced-controls">
+                                            <div class="control-row">
+                                                <span>Radio de borde</span>
+                                                <div class="radio-group">
+                                                    <button class="radio-btn @(_cardStyle.BorderRadius == "small" ? "active" : "")" 
+                                                            @onclick="SetBorderRadiusSmall">S</button>
+                                                    <button class="radio-btn @(_cardStyle.BorderRadius == "medium" ? "active" : "")" 
+                                                            @onclick="SetBorderRadiusMedium">M</button>
+                                                    <button class="radio-btn @(_cardStyle.BorderRadius == "large" ? "active" : "")" 
+                                                            @onclick="SetBorderRadiusLarge">L</button>
+                                                </div>
+                                            </div>
+                                            <div class="control-row">
+                                                <span>Sombra</span>
+                                                <div class="radio-group">
+                                                    <button class="radio-btn @(_cardStyle.ShadowStyle == "soft" ? "active" : "")" 
+                                                            @onclick="SetShadowSoft">Soft</button>
+                                                    <button class="radio-btn @(_cardStyle.ShadowStyle == "medium" ? "active" : "")" 
+                                                            @onclick="SetShadowMedium">Med</button>
+                                                    <button class="radio-btn @(_cardStyle.ShadowStyle == "strong" ? "active" : "")" 
+                                                            @onclick="SetShadowStrong">Strong</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @* AVATAR AVANZADO *@
+                                    <div class="advanced-block">
+                                        <h4 class="advanced-block-title">Avatar</h4>
+                                        <div class="advanced-controls">
+                                            <div class="control-row">
+                                                <span>Tamaño</span>
+                                                <div class="radio-group">
+                                                    <button class="radio-btn @(_cardStyle.AvatarSize == "S" ? "active" : "")" 
+                                                            @onclick="SetAvatarSizeS">S</button>
+                                                    <button class="radio-btn @(_cardStyle.AvatarSize == "M" ? "active" : "")" 
+                                                            @onclick="SetAvatarSizeM">M</button>
+                                                    <button class="radio-btn @(_cardStyle.AvatarSize == "L" ? "active" : "")" 
+                                                            @onclick="SetAvatarSizeL">L</button>
+                                                </div>
+                                            </div>
+                                            <div class="control-row">
+                                                <span>Efecto glow</span>
+                                                <MudSwitch T="bool" @bind-Value="_cardStyle.AvatarGlow" Color="Color.Primary" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @* BOTONES AVANZADO *@
+                                    <div class="advanced-block">
+                                        <h4 class="advanced-block-title">Botones</h4>
+                                        <div class="advanced-controls">
+                                            <div class="control-row">
+                                                <span>Forma</span>
+                                                <div class="radio-group">
+                                                    <button class="radio-btn @(_cardStyle.ButtonShape == "pill" ? "active" : "")" 
+                                                            @onclick="SetButtonShapePill">Pill</button>
+                                                    <button class="radio-btn @(_cardStyle.ButtonShape == "rounded" ? "active" : "")" 
+                                                            @onclick="SetButtonShapeRounded">Round</button>
+                                                    <button class="radio-btn @(_cardStyle.ButtonShape == "square" ? "active" : "")" 
+                                                            @onclick="SetButtonShapeSquare">Square</button>
+                                                </div>
+                                            </div>
+                                            <div class="control-row">
+                                                <span>Estilo</span>
+                                                <div class="radio-group">
+                                                    <button class="radio-btn @(_cardStyle.ButtonStyle == "filled" ? "active" : "")" 
+                                                            @onclick="SetButtonStyleFilled">Filled</button>
+                                                    <button class="radio-btn @(_cardStyle.ButtonStyle == "outline" ? "active" : "")" 
+                                                            @onclick="SetButtonStyleOutline">Outline</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @* CONTRASTE DE TEXTO *@
+                                    <div class="advanced-block">
+                                        <h4 class="advanced-block-title">Contraste</h4>
+                                        <div class="advanced-controls">
+                                            <div class="control-row">
+                                                <span>Modo de texto</span>
+                                                <div class="radio-group">
+                                                    <button class="radio-btn @(_cardStyle.ContrastMode == "auto" ? "active" : "")" 
+                                                            @onclick="SetContrastAuto">Auto ✓</button>
+                                                    <button class="radio-btn @(_cardStyle.ContrastMode == "force-light" ? "active" : "")" 
+                                                            @onclick="SetContrastLight">Claro</button>
+                                                    <button class="radio-btn @(_cardStyle.ContrastMode == "force-dark" ? "active" : "")" 
+                                                            @onclick="SetContrastDark">Oscuro</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </MudCollapse>
+                        </div>
+                    </MudCollapse>
+                </section>
+
+
+                @* ─────────────────────────────────────────────────────────
                    PROFILE PHOTO - PREMIUM REDESIGN (Matches Mockup)
                    ───────────────────────────────────────────────────────── *@
                 <section class="profile-photo-card">
@@ -573,7 +825,7 @@ else
                                 </div>
 
                                 @* Scrollable Content Area *@
-                                <div class="phone-card-content">
+                                <div class="phone-card-content @GetBackgroundContrastClass()" style="@GetPreviewBackgroundStyle()">
                                     @* Avatar Section *@
                                     <div class="phone-avatar-section">
                                         @if (!string.IsNullOrEmpty(_card.ProfileImageUrl))
@@ -1373,6 +1625,305 @@ else
         gap: 8px;
         font-size: 0.875rem;
         color: var(--dt-text-primary, #E5E7EB);
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       APPEARANCE SECTION STYLES
+       ───────────────────────────────────────────────────────── */
+    .icon-appearance {
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    }
+
+    .appearance-chips-summary {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+        margin-right: 12px;
+    }
+
+    .summary-chip {
+        background: rgba(99, 102, 241, 0.15);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #A5B4FC;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    @@media (max-width: 768px) {
+        .appearance-chips-summary {
+            display: none;
+        }
+    }
+
+    .appearance-content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .appearance-block {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .appearance-block-title {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--dt-text-secondary, #9CA3AF);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0;
+    }
+
+    /* Presets Grid */
+    .appearance-presets-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+    }
+
+    @@media (max-width: 900px) {
+        .appearance-presets-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @@media (max-width: 500px) {
+        .appearance-presets-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .appearance-preset-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 12px;
+        background: var(--dt-surface-2, #162234);
+        border: 2px solid transparent;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .appearance-preset-card:hover {
+        background: var(--dt-hover-surface, #17243A);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .appearance-preset-card.selected {
+        border-color: #6366F1;
+        background: rgba(99, 102, 241, 0.1);
+    }
+
+    .preset-preview {
+        width: 100%;
+        height: 50px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .preset-name {
+        font-size: 0.75rem;
+        color: var(--dt-text-secondary, #9CA3AF);
+        text-align: center;
+    }
+
+    .preset-check {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 20px;
+        height: 20px;
+        background: #6366F1;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    /* Options Row */
+    .appearance-options-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    @@media (max-width: 640px) {
+        .appearance-options-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Segment Selector */
+    .segment-selector {
+        display: flex;
+        background: var(--dt-surface-2, #162234);
+        border-radius: 10px;
+        padding: 4px;
+        gap: 4px;
+    }
+
+    .segment-btn {
+        flex: 1;
+        padding: 10px 16px;
+        border: none;
+        background: transparent;
+        color: var(--dt-text-secondary, #9CA3AF);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .segment-btn:hover {
+        color: var(--dt-text-primary, #E5E7EB);
+    }
+
+    .segment-btn.active {
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Intensity Slider */
+    .intensity-slider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+    }
+
+    .slider-label {
+        font-size: 0.75rem;
+        color: var(--dt-text-muted, #6B7280);
+        min-width: 70px;
+    }
+
+    /* Footer */
+    .appearance-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 8px;
+        border-top: 1px solid rgba(99, 102, 241, 0.1);
+    }
+
+    .advanced-toggle-link,
+    .reset-link {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: none;
+        border: none;
+        color: var(--dt-text-muted, #6B7280);
+        font-size: 0.8125rem;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .advanced-toggle-link:hover {
+        color: #A5B4FC;
+        background: rgba(99, 102, 241, 0.1);
+    }
+
+    .reset-link:hover {
+        color: #F87171;
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Advanced Options */
+    .advanced-options {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        padding-top: 16px;
+    }
+
+    @@media (max-width: 900px) {
+        .advanced-options {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 500px) {
+        .advanced-options {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .advanced-block {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+        background: var(--dt-surface-2, #162234);
+        border-radius: 12px;
+    }
+
+    .advanced-block-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--dt-text-muted, #6B7280);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0;
+    }
+
+    .advanced-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .control-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .control-row > span {
+        font-size: 0.8125rem;
+        color: var(--dt-text-secondary, #9CA3AF);
+    }
+
+    .radio-group {
+        display: flex;
+        gap: 4px;
+    }
+
+    .radio-btn {
+        padding: 6px 12px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        background: transparent;
+        color: var(--dt-text-muted, #6B7280);
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .radio-btn:hover {
+        border-color: rgba(99, 102, 241, 0.4);
+        color: var(--dt-text-secondary, #9CA3AF);
+    }
+
+    .radio-btn.active {
+        background: #6366F1;
+        border-color: #6366F1;
+        color: white;
     }
 
     /* ─────────────────────────────────────────────────────────
@@ -2362,6 +2913,103 @@ else
     .gallery-empty-state span {
         font-size: 0.8rem;
     }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       AUTO-CONTRAST SYSTEM
+       Dynamic text colors based on surface luminance
+       ═══════════════════════════════════════════════════════════════ */
+    
+    /* === MODO OSCURO (texto claro sobre fondo oscuro) === */
+    .contrast-dark {
+        --surface-text-primary: #FFFFFF;
+        --surface-text-secondary: rgba(255, 255, 255, 0.75);
+        --surface-text-muted: rgba(255, 255, 255, 0.5);
+        --surface-input-bg: rgba(255, 255, 255, 0.08);
+        --surface-input-border: rgba(255, 255, 255, 0.2);
+        --surface-input-text: #FFFFFF;
+        --surface-input-placeholder: rgba(255, 255, 255, 0.5);
+        --surface-icon: rgba(255, 255, 255, 0.85);
+        --surface-chip-bg: rgba(255, 255, 255, 0.1);
+        --surface-chip-text: rgba(255, 255, 255, 0.8);
+        --surface-chip-border: rgba(255, 255, 255, 0.15);
+    }
+    
+    /* === MODO CLARO (texto oscuro sobre fondo claro) === */
+    .contrast-light {
+        --surface-text-primary: #1A1A2E;
+        --surface-text-secondary: rgba(26, 26, 46, 0.75);
+        --surface-text-muted: rgba(26, 26, 46, 0.5);
+        --surface-input-bg: rgba(0, 0, 0, 0.06);
+        --surface-input-border: rgba(0, 0, 0, 0.2);
+        --surface-input-text: #1A1A2E;
+        --surface-input-placeholder: rgba(0, 0, 0, 0.45);
+        --surface-icon: rgba(26, 26, 46, 0.85);
+        --surface-chip-bg: rgba(0, 0, 0, 0.08);
+        --surface-chip-text: rgba(26, 26, 46, 0.8);
+        --surface-chip-border: rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Apply contrast variables to phone preview elements */
+    .phone-card-content.contrast-dark .phone-name,
+    .phone-card-content.contrast-light .phone-name {
+        color: var(--surface-text-primary) !important;
+    }
+    
+    .phone-card-content.contrast-dark .phone-title,
+    .phone-card-content.contrast-dark .phone-company,
+    .phone-card-content.contrast-light .phone-title,
+    .phone-card-content.contrast-light .phone-company {
+        color: var(--surface-text-secondary) !important;
+    }
+    
+    .phone-card-content.contrast-dark .phone-bio,
+    .phone-card-content.contrast-light .phone-bio {
+        color: var(--surface-text-secondary) !important;
+    }
+    
+    /* Status chips */
+    .phone-card-content.contrast-dark .phone-chip,
+    .phone-card-content.contrast-light .phone-chip {
+        background: var(--surface-chip-bg) !important;
+        color: var(--surface-chip-text) !important;
+        border-color: var(--surface-chip-border) !important;
+    }
+    
+    /* Form section in preview */
+    .phone-card-content.contrast-dark .phone-form-title,
+    .phone-card-content.contrast-light .phone-form-title {
+        color: var(--surface-text-primary) !important;
+    }
+    
+    .phone-card-content.contrast-dark .phone-form-subtitle,
+    .phone-card-content.contrast-light .phone-form-subtitle {
+        color: var(--surface-text-muted) !important;
+    }
+    
+    /* Inputs in preview */
+    .phone-card-content.contrast-dark .phone-input,
+    .phone-card-content.contrast-light .phone-input {
+        background: var(--surface-input-bg) !important;
+        border-color: var(--surface-input-border) !important;
+        color: var(--surface-input-text) !important;
+    }
+    
+    .phone-card-content.contrast-dark .phone-input::placeholder,
+    .phone-card-content.contrast-light .phone-input::placeholder {
+        color: var(--surface-input-placeholder) !important;
+    }
+    
+    /* Icons */
+    .phone-card-content.contrast-dark .mud-icon-root,
+    .phone-card-content.contrast-light .mud-icon-root {
+        color: var(--surface-icon) !important;
+    }
+    
+    /* Gallery title */
+    .phone-card-content.contrast-dark .phone-gallery-title,
+    .phone-card-content.contrast-light .phone-gallery-title {
+        color: var(--surface-text-primary) !important;
+    }
 </style>
 
 @code {
@@ -2373,6 +3021,12 @@ else
     private bool _socialSectionExpanded = false;
     private bool _actionButtonsSectionExpanded = true;
     private bool _isUploading = false;
+    
+    // Appearance Section
+    private bool _appearanceSectionExpanded = false;
+    private bool _advancedModeExpanded = false;
+    private CardStyleModel _cardStyle = new();
+    private string _selectedPreset = "premium-dark";
     
     // Portfolio Gallery
     private bool _isPortfolioTemplate = false;
@@ -2444,6 +3098,16 @@ else
             catch { _galleryImages = new(); }
         }
         
+        // Appearance Style
+        if (!string.IsNullOrEmpty(_card?.AppearanceStyleJson))
+        {
+            try
+            {
+                _cardStyle = JsonSerializer.Deserialize<CardStyleModel>(_card.AppearanceStyleJson) ?? new();
+            }
+            catch { _cardStyle = new(); }
+        }
+        
         // Check template type from query parameter or card template
         var uri = new Uri(Navigation.Uri);
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
@@ -2490,6 +3154,9 @@ else
             {
                 _card.GalleryImagesJson = null;
             }
+            
+            // Serialize Appearance Style
+            _card.AppearanceStyleJson = JsonSerializer.Serialize(_cardStyle);
 
             _card.UpdatedAt = DateTime.UtcNow;
             await DbContext.SaveChangesAsync();
@@ -2570,6 +3237,155 @@ else
         return count;
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // APPEARANCE SECTION METHODS
+    // ═══════════════════════════════════════════════════════════════
+    private void ToggleAppearanceSection() => _appearanceSectionExpanded = !_appearanceSectionExpanded;
+    private void ToggleAdvancedMode() => _advancedModeExpanded = !_advancedModeExpanded;
+
+    private void ApplyPreset(string presetId)
+    {
+        var preset = _presets.FirstOrDefault(p => p.Id == presetId);
+        if (preset == null) return;
+        
+        _selectedPreset = presetId;
+        _cardStyle.BackgroundType = preset.BackgroundType;
+        _cardStyle.BackgroundValue = preset.BackgroundValue;
+        _cardStyle.CardContainerStyle = preset.CardStyle;
+        _cardStyle.ButtonShape = preset.ButtonShape;
+        _cardStyle.ButtonStyle = preset.ButtonStyle;
+        _cardStyle.BackgroundIsDark = preset.BackgroundIsDark;
+        _cardStyle.CardIsDark = preset.CardIsDark;
+        MarkUnsaved();
+    }
+
+    private void ResetAppearanceToDefault()
+    {
+        _cardStyle = new CardStyleModel();
+        _selectedPreset = "premium-dark";
+        MarkUnsaved();
+    }
+
+    private string GetBackgroundSummary() => _cardStyle.BackgroundType switch
+    {
+        "gradient" => "Gradiente",
+        "solid" => "Sólido",
+        "image" => "Imagen",
+        _ => "Gradiente"
+    };
+
+    private string GetCardSummary() => _cardStyle.CardContainerStyle switch
+    {
+        "glass" => "Glass",
+        "solid" => "Solid",
+        "elevated" => "Elevated",
+        _ => "Glass"
+    };
+
+    private string GetButtonsSummary() => _cardStyle.ButtonShape switch
+    {
+        "pill" => "Pill",
+        "rounded" => "Rounded",
+        "square" => "Square",
+        _ => "Rounded"
+    };
+
+    private string GetPreviewBackgroundStyle()
+    {
+        if (_cardStyle.BackgroundType == "image" && !string.IsNullOrEmpty(_cardStyle.BackgroundImageUrl))
+            return $"background: url('{_cardStyle.BackgroundImageUrl}') center/cover no-repeat";
+        return $"background: {_cardStyle.BackgroundValue}";
+    }
+
+    // Specific methods for appearance onclick handlers
+    // Background Type
+    private void SetBackgroundGradient() { _cardStyle.BackgroundType = "gradient"; MarkUnsaved(); }
+    private void SetBackgroundSolid() { _cardStyle.BackgroundType = "solid"; MarkUnsaved(); }
+    private void SetBackgroundImage() { _cardStyle.BackgroundType = "image"; MarkUnsaved(); }
+    
+    // Card Style
+    private void SetCardStyleGlass() { _cardStyle.CardContainerStyle = "glass"; MarkUnsaved(); }
+    private void SetCardStyleSolid() { _cardStyle.CardContainerStyle = "solid"; MarkUnsaved(); }
+    private void SetCardStyleElevated() { _cardStyle.CardContainerStyle = "elevated"; MarkUnsaved(); }
+    
+    private void OnGlassIntensityChanged(int value) { _cardStyle.GlassIntensity = value; MarkUnsaved(); }
+    
+    // Border Radius
+    private void SetBorderRadiusSmall() { _cardStyle.BorderRadius = "small"; MarkUnsaved(); }
+    private void SetBorderRadiusMedium() { _cardStyle.BorderRadius = "medium"; MarkUnsaved(); }
+    private void SetBorderRadiusLarge() { _cardStyle.BorderRadius = "large"; MarkUnsaved(); }
+    
+    // Shadow Style
+    private void SetShadowSoft() { _cardStyle.ShadowStyle = "soft"; MarkUnsaved(); }
+    private void SetShadowMedium() { _cardStyle.ShadowStyle = "medium"; MarkUnsaved(); }
+    private void SetShadowStrong() { _cardStyle.ShadowStyle = "strong"; MarkUnsaved(); }
+    
+    // Avatar Size
+    private void SetAvatarSizeS() { _cardStyle.AvatarSize = "S"; MarkUnsaved(); }
+    private void SetAvatarSizeM() { _cardStyle.AvatarSize = "M"; MarkUnsaved(); }
+    private void SetAvatarSizeL() { _cardStyle.AvatarSize = "L"; MarkUnsaved(); }
+    
+    // Button Shape
+    private void SetButtonShapePill() { _cardStyle.ButtonShape = "pill"; MarkUnsaved(); }
+    private void SetButtonShapeRounded() { _cardStyle.ButtonShape = "rounded"; MarkUnsaved(); }
+    private void SetButtonShapeSquare() { _cardStyle.ButtonShape = "square"; MarkUnsaved(); }
+    
+    // Button Style
+    private void SetButtonStyleFilled() { _cardStyle.ButtonStyle = "filled"; MarkUnsaved(); }
+    private void SetButtonStyleOutline() { _cardStyle.ButtonStyle = "outline"; MarkUnsaved(); }
+    
+    // Contrast Mode
+    private void SetContrastAuto() { _cardStyle.ContrastMode = "auto"; MarkUnsaved(); }
+    private void SetContrastLight() { _cardStyle.ContrastMode = "force-light"; MarkUnsaved(); }
+    private void SetContrastDark() { _cardStyle.ContrastMode = "force-dark"; MarkUnsaved(); }
+    
+    // Get contrast class for background surface
+    private string GetBackgroundContrastClass()
+    {
+        if (_cardStyle.ContrastMode == "force-light") return "contrast-light";
+        if (_cardStyle.ContrastMode == "force-dark") return "contrast-dark";
+        // Auto mode - use preset's luminance value
+        return _cardStyle.BackgroundIsDark ? "contrast-dark" : "contrast-light";
+    }
+    
+    // Get contrast class for card surface
+    private string GetCardContrastClass()
+    {
+        if (_cardStyle.ContrastMode == "force-light") return "contrast-light";
+        if (_cardStyle.ContrastMode == "force-dark") return "contrast-dark";
+        // Auto mode - use preset's luminance value for card
+        return _cardStyle.CardIsDark ? "contrast-dark" : "contrast-light";
+    }
+    
+    // Get contrast class for form (follows card contrast)
+    private string GetFormContrastClass() => GetCardContrastClass();
+
+    private async Task UploadBackgroundImage(IBrowserFile file)
+    {
+        if (file == null) return;
+
+        try 
+        {
+            var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "backgrounds");
+            Directory.CreateDirectory(uploadsPath);
+            
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.Name)}";
+            var filePath = Path.Combine(uploadsPath, fileName);
+            
+            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            using var fileStream = new FileStream(filePath, FileMode.Create);
+            await stream.CopyToAsync(fileStream);
+            
+            _cardStyle.BackgroundImageUrl = $"/uploads/backgrounds/{fileName}";
+            MarkUnsaved();
+            Snackbar.Add("Imagen de fondo actualizada", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al subir: {ex.Message}", Severity.Error);
+        }
+    }
+
     private string GetInitials(string? name)
     {
         if (string.IsNullOrEmpty(name)) return "?";
@@ -2619,6 +3435,52 @@ else
         public string Title { get; set; } = "";
         public string Url { get; set; } = "";
     }
+
+    private class CardStyleModel
+    {
+        // Fondo
+        public string BackgroundType { get; set; } = "gradient"; // gradient, solid, image
+        public string BackgroundValue { get; set; } = "linear-gradient(135deg, #0F0A1E 0%, #1E1B4B 50%, #0F0A1E 100%)";
+        public string? BackgroundImageUrl { get; set; }
+        
+        // Tarjeta
+        public string CardContainerStyle { get; set; } = "glass"; // glass, solid, elevated
+        public int GlassIntensity { get; set; } = 50; // 0-100
+        
+        // Avanzado - Fondo
+        public double OverlayOpacity { get; set; } = 0.5;
+        public bool ShowGrain { get; set; } = false;
+        
+        // Avanzado - Contenedor
+        public string BorderRadius { get; set; } = "medium"; // small, medium, large
+        public string ShadowStyle { get; set; } = "soft"; // soft, medium, strong
+        
+        // Avanzado - Avatar
+        public string AvatarSize { get; set; } = "M"; // S, M, L
+        public bool AvatarGlow { get; set; } = true;
+        
+        // Avanzado - Botones
+        public string ButtonShape { get; set; } = "rounded"; // pill, rounded, square
+        public string ButtonStyle { get; set; } = "filled"; // filled, outline
+        
+        // Contraste automático
+        public string ContrastMode { get; set; } = "auto"; // auto, force-light, force-dark
+        public bool BackgroundIsDark { get; set; } = true;
+        public bool CardIsDark { get; set; } = true;
+    }
+
+    private record AppearancePreset(string Id, string Name, string BackgroundType, string BackgroundValue, 
+        string CardStyle, string ButtonShape, string ButtonStyle, bool BackgroundIsDark, bool CardIsDark);
+    
+    private static readonly List<AppearancePreset> _presets = new()
+    {
+        new("premium-dark", "Premium Dark", "gradient", "linear-gradient(135deg, #0F0A1E 0%, #1E1B4B 50%, #0F0A1E 100%)", "glass", "rounded", "filled", true, true),
+        new("soft-gradient", "Soft Gradient", "gradient", "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", "glass", "pill", "filled", true, true),
+        new("glass-clean", "Glass Clean", "gradient", "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)", "glass", "rounded", "outline", true, true),
+        new("high-contrast", "High Contrast", "solid", "#000000", "solid", "square", "filled", true, true),
+        new("minimal-white", "Minimal White", "solid", "#F8FAFC", "elevated", "rounded", "outline", false, false),
+        new("ocean-wave", "Ocean Wave", "gradient", "linear-gradient(135deg, #0077b6 0%, #00b4d8 50%, #90e0ef 100%)", "glass", "pill", "filled", true, true)
+    };
 
     // ═══════════════════════════════════════════════════════════════
     // PHOTO UPLOAD LOGIC (Single Flow with Loading State)

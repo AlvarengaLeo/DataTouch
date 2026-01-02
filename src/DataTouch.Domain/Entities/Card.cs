@@ -32,6 +32,11 @@ public class Card
     /// Gallery images for portfolio template: [{url, title, description, order}, ...]
     /// </summary>
     public string? GalleryImagesJson { get; set; }
+    
+    /// <summary>
+    /// JSON storage for appearance customization (background, card style, buttons, etc.)
+    /// </summary>
+    public string? AppearanceStyleJson { get; set; }
 
     
     // ═══════════════════════════════════════════════════════════════
