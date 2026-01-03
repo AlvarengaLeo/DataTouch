@@ -72,65 +72,6 @@ else
             <main class="editor-main">
 
                 @* ─────────────────────────────────────────────────────────
-                   LEVEL 1 (DOMINANT): IDENTITY
-                   ───────────────────────────────────────────────────────── *@
-                <section class="section-card section-level-1">
-                    <div class="section-header">
-                        <div class="section-icon icon-identity">
-                            <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Medium" />
-                        </div>
-                        <div class="section-header-text">
-                            <h2 class="section-title">Identidad</h2>
-                            <p class="section-description">Cómo te verán en tu tarjeta pública</p>
-                        </div>
-                    </div>
-                    <div class="section-content">
-                        <div class="form-grid">
-                            <div class="form-row">
-                                <MudTextField @bind-Value="_card.FullName" 
-                                              Label="Nombre completo" 
-                                              Variant="Variant.Outlined" 
-                                              Required="true" 
-                                              Immediate="true"
-                                              @oninput="MarkUnsaved" />
-                            </div>
-                            <div class="form-row">
-                                <MudTextField @bind-Value="_card.Title" 
-                                              Label="Puesto o cargo" 
-                                              Variant="Variant.Outlined" 
-                                              Immediate="true"
-                                              Placeholder="Ej: Director Comercial"
-                                              @oninput="MarkUnsaved" />
-                            </div>
-                            <div class="form-row form-row-full">
-                                <MudTextField @bind-Value="_card.CompanyName" 
-                                              Label="Empresa" 
-                                              Variant="Variant.Outlined" 
-                                              Immediate="true"
-                                              HelperText="Deja vacío para usar el nombre de tu organización"
-                                              @oninput="MarkUnsaved" />
-                            </div>
-                            <div class="form-row form-row-full">
-                                <MudTextField @bind-Value="_card.Bio" 
-                                              Label="Biografía" 
-                                              Variant="Variant.Outlined" 
-                                              Lines="3"
-                                              Immediate="true"
-                                              Counter="300" 
-                                              MaxLength="300"
-                                              HelperText="@GetBioFeedback()"
-                                              @oninput="MarkUnsaved" />
-                                <p class="bio-warning">
-                                    <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
-                                    Este texto será visible públicamente
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-
-                @* ─────────────────────────────────────────────────────────
                    LEVEL 2 (COLLAPSIBLE): APARIENCIA
                    ───────────────────────────────────────────────────────── *@
                 <section class="section-card section-level-2 section-appearance">
@@ -284,6 +225,51 @@ else
                                     <div class="advanced-block">
                                         <h4 class="advanced-block-title">Contenedor</h4>
                                         <div class="advanced-controls">
+                                            @* Toggle de Independencia *@
+                                            <div class="control-row control-row-toggle">
+                                                <div class="toggle-info">
+                                                    <span>Tarjeta independiente</span>
+                                                    <span class="toggle-hint">Permite estilo diferente al fondo</span>
+                                                </div>
+                                                <MudSwitch T="bool" Value="!_cardStyle.CardLinkedToBackground" 
+                                                           ValueChanged="@((bool val) => { _cardStyle.CardLinkedToBackground = !val; MarkUnsaved(); })" 
+                                                           Color="Color.Primary" />
+                                            </div>
+                                            
+                                            @if (!_cardStyle.CardLinkedToBackground)
+                                            {
+                                                @* Controles de color independiente *@
+                                                <div class="control-row">
+                                                    <span>Color de fondo</span>
+                                                    <div class="color-picker-row">
+                                                        <button class="color-swatch @(_cardStyle.CardBackgroundColor == "#1A1035" ? "selected" : "")" 
+                                                                style="background: #1A1035;" 
+                                                                @onclick="@(() => SetCardBackgroundColor("#1A1035"))"></button>
+                                                        <button class="color-swatch @(_cardStyle.CardBackgroundColor == "#0F0A1E" ? "selected" : "")" 
+                                                                style="background: #0F0A1E;" 
+                                                                @onclick="@(() => SetCardBackgroundColor("#0F0A1E"))"></button>
+                                                        <button class="color-swatch @(_cardStyle.CardBackgroundColor == "#1E1B4B" ? "selected" : "")" 
+                                                                style="background: #1E1B4B;" 
+                                                                @onclick="@(() => SetCardBackgroundColor("#1E1B4B"))"></button>
+                                                        <button class="color-swatch @(_cardStyle.CardBackgroundColor == "#FFFFFF" ? "selected" : "")" 
+                                                                style="background: #FFFFFF; border: 1px solid #444;" 
+                                                                @onclick="@(() => SetCardBackgroundColor("#FFFFFF"))"></button>
+                                                        <button class="color-swatch @(_cardStyle.CardBackgroundColor == "#F8FAFC" ? "selected" : "")" 
+                                                                style="background: #F8FAFC; border: 1px solid #444;" 
+                                                                @onclick="@(() => SetCardBackgroundColor("#F8FAFC"))"></button>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="control-row control-row-inherited">
+                                                    <span class="inherited-label">
+                                                        <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
+                                                        Heredando estilo del fondo
+                                                    </span>
+                                                </div>
+                                            }
+                                            
                                             <div class="control-row">
                                                 <span>Radio de borde</span>
                                                 <div class="radio-group">
@@ -379,6 +365,65 @@ else
                             </MudCollapse>
                         </div>
                     </MudCollapse>
+                </section>
+
+
+                @* ─────────────────────────────────────────────────────────
+                   LEVEL 1 (DOMINANT): IDENTITY
+                   ───────────────────────────────────────────────────────── *@
+                <section class="section-card section-level-1">
+                    <div class="section-header">
+                        <div class="section-icon icon-identity">
+                            <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Medium" />
+                        </div>
+                        <div class="section-header-text">
+                            <h2 class="section-title">Identidad</h2>
+                            <p class="section-description">Cómo te verán en tu tarjeta pública</p>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <MudTextField @bind-Value="_card.FullName" 
+                                              Label="Nombre completo" 
+                                              Variant="Variant.Outlined" 
+                                              Required="true" 
+                                              Immediate="true"
+                                              @oninput="MarkUnsaved" />
+                            </div>
+                            <div class="form-row">
+                                <MudTextField @bind-Value="_card.Title" 
+                                              Label="Puesto o cargo" 
+                                              Variant="Variant.Outlined" 
+                                              Immediate="true"
+                                              Placeholder="Ej: Director Comercial"
+                                              @oninput="MarkUnsaved" />
+                            </div>
+                            <div class="form-row form-row-full">
+                                <MudTextField @bind-Value="_card.CompanyName" 
+                                              Label="Empresa" 
+                                              Variant="Variant.Outlined" 
+                                              Immediate="true"
+                                              HelperText="Deja vacío para usar el nombre de tu organización"
+                                              @oninput="MarkUnsaved" />
+                            </div>
+                            <div class="form-row form-row-full">
+                                <MudTextField @bind-Value="_card.Bio" 
+                                              Label="Biografía" 
+                                              Variant="Variant.Outlined" 
+                                              Lines="3"
+                                              Immediate="true"
+                                              Counter="300" 
+                                              MaxLength="300"
+                                              HelperText="@GetBioFeedback()"
+                                              @oninput="MarkUnsaved" />
+                                <p class="bio-warning">
+                                    <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
+                                    Este texto será visible públicamente
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
 
@@ -830,13 +875,13 @@ else
                                     <div class="phone-avatar-section">
                                         @if (!string.IsNullOrEmpty(_card.ProfileImageUrl))
                                         {
-                                            <div class="phone-avatar phone-avatar-image">
+                                            <div class="phone-avatar phone-avatar-image avatar-size-@_cardStyle.AvatarSize.ToLower() @(_cardStyle.AvatarGlow ? "avatar-glow" : "")">
                                                 <img src="@_card.ProfileImageUrl" alt="@_card.FullName" />
                                             </div>
                                         }
                                         else
                                         {
-                                            <div class="phone-avatar phone-avatar-initials">
+                                            <div class="phone-avatar phone-avatar-initials avatar-size-@_cardStyle.AvatarSize.ToLower() @(_cardStyle.AvatarGlow ? "avatar-glow" : "")">
                                                 <span>@GetInitials(_card.FullName)</span>
                                             </div>
                                         }
@@ -950,7 +995,7 @@ else
                                     </div>
 
                                     @* CTA Buttons - Matching Public Card *@
-                                    <div class="phone-cta-container">
+                                    <div class="phone-cta-container btn-shape-@_cardStyle.ButtonShape btn-style-@_cardStyle.ButtonStyle">
                                         @* Primary CTA: Guardar Contacto (Full Width) *@
                                         @if (_card.ShowSaveContact)
                                         {
@@ -1844,21 +1889,34 @@ else
 
     /* Advanced Options */
     .advanced-options {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        display: flex;
+        flex-wrap: wrap;
         gap: 20px;
         padding-top: 16px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .advanced-options > .advanced-block {
+        flex: 1 1 200px;
+        min-width: 180px;
+        max-width: 280px;
     }
 
-    @@media (max-width: 900px) {
-        .advanced-options {
-            grid-template-columns: repeat(2, 1fr);
+    @@media (max-width: 1100px) {
+        .advanced-options > .advanced-block {
+            flex: 1 1 220px;
+            max-width: none;
         }
     }
 
-    @@media (max-width: 500px) {
+    @@media (max-width: 700px) {
         .advanced-options {
-            grid-template-columns: 1fr;
+            flex-direction: column;
+        }
+        .advanced-options > .advanced-block {
+            flex: 1 1 100%;
+            max-width: 100%;
         }
     }
 
@@ -1924,6 +1982,67 @@ else
         background: #6366F1;
         border-color: #6366F1;
         color: white;
+    }
+    
+    /* Toggle de Independencia */
+    .control-row-toggle {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 8px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+        margin-bottom: 8px;
+    }
+    
+    .control-row-toggle > .toggle-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .control-row-toggle .toggle-hint {
+        font-size: 0.7rem;
+        color: var(--dt-text-muted, #6B7280);
+        font-weight: 400;
+    }
+    
+    .control-row-inherited {
+        justify-content: center;
+        padding: 8px 0;
+    }
+    
+    .inherited-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        color: var(--dt-text-muted, #6B7280);
+        font-style: italic;
+    }
+    
+    /* Color Picker Swatches */
+    .color-picker-row {
+        display: flex;
+        gap: 6px;
+    }
+    
+    .color-swatch {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .color-swatch:hover {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .color-swatch.selected {
+        border-color: #6366F1;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
     }
 
     /* ─────────────────────────────────────────────────────────
@@ -2202,6 +2321,44 @@ else
         color: white;
         text-transform: uppercase;
     }
+    
+    /* Avatar Dynamic Sizes */
+    .phone-avatar.avatar-size-s {
+        width: 90px;
+        height: 90px;
+    }
+    .phone-avatar.avatar-size-s span {
+        font-size: 2rem;
+    }
+    
+    .phone-avatar.avatar-size-m {
+        width: 130px;
+        height: 130px;
+    }
+    .phone-avatar.avatar-size-m span {
+        font-size: 2.75rem;
+    }
+    
+    .phone-avatar.avatar-size-l {
+        width: 160px;
+        height: 160px;
+    }
+    .phone-avatar.avatar-size-l span {
+        font-size: 3.5rem;
+    }
+    
+    /* Avatar Glow Effect */
+    .phone-avatar.avatar-glow {
+        box-shadow: 
+            0 0 0 3px rgba(99, 102, 241, 0.35),
+            0 0 30px rgba(99, 102, 241, 0.25),
+            0 0 60px rgba(139, 92, 246, 0.15),
+            0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+    
+    .phone-avatar:not(.avatar-glow) {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
 
     /* Phone Identity */
     .phone-name {
@@ -2353,6 +2510,36 @@ else
     .cta-email:hover {
         background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
         box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    }
+    
+    /* Button Shape Dynamic - Applied via .btn-shape-* */
+    .btn-shape-pill .phone-cta-primary,
+    .btn-shape-pill .phone-cta-outline {
+        border-radius: 50px;
+    }
+    
+    .btn-shape-rounded .phone-cta-primary,
+    .btn-shape-rounded .phone-cta-outline {
+        border-radius: 14px;
+    }
+    
+    .btn-shape-square .phone-cta-primary,
+    .btn-shape-square .phone-cta-outline {
+        border-radius: 6px;
+    }
+    
+    /* Button Style Dynamic - Applied via .btn-style-* */
+    .btn-style-outline .phone-cta-primary {
+        background: transparent;
+        border: 2px solid #6366F1;
+        color: #A5B4FC;
+        box-shadow: none;
+    }
+    
+    .btn-style-outline .phone-cta-primary:hover {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: #818CF8;
+        transform: translateY(-2px);
     }
 
     /* Status Chips */
@@ -3177,11 +3364,8 @@ else
 
     private void MarkUnsaved()
     {
-        if (!_hasUnsavedChanges)
-        {
-            _hasUnsavedChanges = true;
-            StateHasChanged();
-        }
+        _hasUnsavedChanges = true;
+        StateHasChanged(); // Always trigger re-render for preview updates
     }
 
     private async Task CopyUrl()
@@ -3296,6 +3480,18 @@ else
             return $"background: url('{_cardStyle.BackgroundImageUrl}') center/cover no-repeat";
         return $"background: {_cardStyle.BackgroundValue}";
     }
+    
+    // Get card/container background style when independent
+    private string GetCardBackgroundStyle()
+    {
+        if (_cardStyle.CardLinkedToBackground)
+        {
+            // Linked mode - return empty, CSS handles it
+            return "";
+        }
+        // Independent mode - apply custom background
+        return $"background: {_cardStyle.CardBackgroundColor} !important;";
+    }
 
     // Specific methods for appearance onclick handlers
     // Background Type
@@ -3339,6 +3535,39 @@ else
     private void SetContrastLight() { _cardStyle.ContrastMode = "force-light"; MarkUnsaved(); }
     private void SetContrastDark() { _cardStyle.ContrastMode = "force-dark"; MarkUnsaved(); }
     
+    // Card Independence Toggle
+    private void ToggleCardLinked() 
+    { 
+        _cardStyle.CardLinkedToBackground = !_cardStyle.CardLinkedToBackground; 
+        MarkUnsaved(); 
+    }
+    
+    private void SetCardBackgroundColor(string color) 
+    { 
+        _cardStyle.CardBackgroundColor = color;
+        // Determine if color is dark for contrast
+        _cardStyle.CardIsDarkOverride = IsHexColorDark(color);
+        MarkUnsaved(); 
+    }
+    
+    // Simple luminance check for hex colors
+    private bool IsHexColorDark(string hex)
+    {
+        if (string.IsNullOrEmpty(hex)) return true;
+        hex = hex.TrimStart('#');
+        if (hex.Length < 6) return true;
+        try
+        {
+            int r = Convert.ToInt32(hex.Substring(0, 2), 16);
+            int g = Convert.ToInt32(hex.Substring(2, 2), 16);
+            int b = Convert.ToInt32(hex.Substring(4, 2), 16);
+            // Relative luminance formula
+            double luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+            return luminance < 140; // Below threshold = dark
+        }
+        catch { return true; }
+    }
+    
     // Get contrast class for background surface
     private string GetBackgroundContrastClass()
     {
@@ -3353,7 +3582,14 @@ else
     {
         if (_cardStyle.ContrastMode == "force-light") return "contrast-light";
         if (_cardStyle.ContrastMode == "force-dark") return "contrast-dark";
-        // Auto mode - use preset's luminance value for card
+        
+        // If card is independent, use its own luminance
+        if (!_cardStyle.CardLinkedToBackground)
+        {
+            return _cardStyle.CardIsDarkOverride ? "contrast-dark" : "contrast-light";
+        }
+        
+        // Linked mode - follow background or use preset's card luminance
         return _cardStyle.CardIsDark ? "contrast-dark" : "contrast-light";
     }
     
@@ -3438,13 +3674,15 @@ else
 
     private class CardStyleModel
     {
-        // Fondo
+        // Fondo Global
         public string BackgroundType { get; set; } = "gradient"; // gradient, solid, image
         public string BackgroundValue { get; set; } = "linear-gradient(135deg, #0F0A1E 0%, #1E1B4B 50%, #0F0A1E 100%)";
         public string? BackgroundImageUrl { get; set; }
         
-        // Tarjeta
+        // Tarjeta - Vinculación e Independencia
+        public bool CardLinkedToBackground { get; set; } = true; // Toggle: vinculada/independiente
         public string CardContainerStyle { get; set; } = "glass"; // glass, solid, elevated
+        public string CardBackgroundColor { get; set; } = "#1A1035"; // Color para solid independiente
         public int GlassIntensity { get; set; } = 50; // 0-100
         
         // Avanzado - Fondo
@@ -3467,6 +3705,7 @@ else
         public string ContrastMode { get; set; } = "auto"; // auto, force-light, force-dark
         public bool BackgroundIsDark { get; set; } = true;
         public bool CardIsDark { get; set; } = true;
+        public bool CardIsDarkOverride { get; set; } = true; // Para tarjeta independiente
     }
 
     private record AppearancePreset(string Id, string Name, string BackgroundType, string BackgroundValue, 
