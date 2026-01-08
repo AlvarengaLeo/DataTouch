@@ -3300,6 +3300,19 @@ else
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
         var templateParam = query["template"];
         _isPortfolioTemplate = templateParam == "portfolio-creative";
+        
+        // Clear gallery images when switching away from portfolio template
+        if (!_isPortfolioTemplate && _galleryImages.Any())
+        {
+            _galleryImages.Clear();
+            if (_card != null)
+            {
+                _card.GalleryImagesJson = null;
+                _card.UpdatedAt = DateTime.UtcNow;
+                // Save immediately to ensure gallery is cleared in database
+                _ = DbContext.SaveChangesAsync();
+            }
+        }
     }
 
     private async Task SaveCard()
